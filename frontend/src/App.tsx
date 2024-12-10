@@ -1,21 +1,34 @@
-import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
+import Pairs from "@/components/pairs"
+import Summary from "@/components/summary"
+import Header from "@/components/header"
+import urm from "@/assets/urm.png"
 
-function App() {
+export default function App() {
   return (
-    <>
-      <ConnectButton />
-      <ConnectedAccount />
-    </>
+    <div className="font-ubuntu-mono w-screen h-screen flex flex-col">
+      <div className="flex w-screen justify-between">
+        <div className="flex items-center p-4 gap-4">
+          <img src={urm} alt="logo" className="w-12" />
+          <Pairs />
+          <Summary />
+        </div>
+        <div className="flex items-center p-4">
+          <Header />
+        </div>
+        
+      </div>
+
+      <div className="flex w-screen h-screen bg-gray-100">
+        <div className="flex flex-col w-5/6 bg-gray-200">
+          <div className="flex h-2/3 bg-gray-300">
+            <div className="flex w-3/4 bg-gray-400">chart</div>
+            <div className="flex w-1/4 bg-gray-500">order book</div>
+          </div>
+          <div className="flex h-1/3">user orders</div>
+        </div>
+        <div className="flex w-1/6">order creation</div>
+      </div>
+      
+    </div>
   );
 }
-
-function ConnectedAccount() {
-  const account = useCurrentAccount();
-  if (!account) {
-    return null;
-  }
-
-  return <div>Connected to {account.address}</div>;
-}
-
-export default App;
