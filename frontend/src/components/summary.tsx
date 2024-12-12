@@ -1,11 +1,14 @@
+import { usePrice } from "@/hooks/usePrice"
+
 export default function Summary() {
+
+  const { price, isLoading, error } = usePrice()
+
   return (
     <div className="flex gap-8">
       <div className="flex flex-col">
-        <div className="text-sm text-gray-500">LAST PRICE (24H)</div>
-        <div className="">
-          $3.7669 <span className="text-red-500">-10.29%</span>
-        </div>
+        <div className="text-gray-500 text-sm">LAST PRICE (24H)</div>
+        <div className="">${price} <span className="text-red-500">-10.29%</span></div>
       </div>
       <div className="flex flex-col">
         <div className="text-sm text-gray-500">24H VOLUME</div>

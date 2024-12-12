@@ -2,7 +2,8 @@ import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
 
-export default function Header() {
+export default function Account() {
+
   const account = useCurrentAccount();
   if (account) console.log(`connected to ${account.address}`);
 
