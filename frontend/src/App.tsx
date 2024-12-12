@@ -1,35 +1,34 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
+import Pairs from "@/components/pairs"
+import Summary from "@/components/summary"
+import Header from "@/components/header"
+import urm from "@/assets/urm.png"
 
-function App() {
-  const [count, setCount] = useState(0);
-
+export default function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="font-ubuntu-mono w-screen h-screen flex flex-col">
+      <div className="flex w-screen justify-between">
+        <div className="flex items-center p-4 gap-4">
+          <img src={urm} alt="logo" className="w-12" />
+          <Pairs />
+          <Summary />
+        </div>
+        <div className="flex items-center p-4">
+          <Header />
+        </div>
+        
       </div>
-      <h1 className="text-4xl">Vite + React</h1>clas
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+
+      <div className="flex w-screen h-screen bg-gray-100">
+        <div className="flex flex-col w-5/6 bg-gray-200">
+          <div className="flex h-2/3 bg-gray-300">
+            <div className="flex w-3/4 bg-gray-400">chart</div>
+            <div className="flex w-1/4 bg-gray-500">order book</div>
+          </div>
+          <div className="flex h-1/3">user orders</div>
+        </div>
+        <div className="flex w-1/6">order creation</div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      
+    </div>
   );
 }
-
-export default App;
