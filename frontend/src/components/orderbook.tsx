@@ -33,9 +33,11 @@ interface OrderBookEntriesProps {
 }
 
 function OrderBookEntries({ entries, type }: OrderBookEntriesProps) {
-  const textColor = type === "ask" ? "text-red-500" : "text-green-500";
-  const bgColor = type === "ask" ? "bg-red-400" : "bg-green-400";
-
+  const textColor = type === "ask" ? "text-[#ef5350]" : "text-[#26a69a]";
+  const bgColor = type === "ask" ? "bg-[#ef5350]" : "bg-[#26a69a]"; 
+  // it might be nice to create custom utility class for these colors
+  // these are the ones from trading view lightweight chart docs
+  
   const totalAmount = entries.reduce((sum, entry) => sum + entry.amount, 0);
 
   return entries.map((entry, index) => (
