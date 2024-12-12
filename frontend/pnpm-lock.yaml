@@ -11,6 +11,9 @@ importers:
       '@mysten/dapp-kit':
         specifier: ^0.14.39
         version: 0.14.39(@tanstack/react-query@5.62.0(react@18.3.1))(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)
+      '@mysten/deepbook-v3':
+        specifier: ^0.12.17
+        version: 0.12.17(typescript@5.6.3)
       '@mysten/sui':
         specifier: ^1.16.0
         version: 1.16.0(typescript@5.6.3)
@@ -461,11 +464,18 @@ packages:
   '@mysten/bcs@1.1.1':
     resolution: {integrity: sha512-8X3IwmVfkwgHnNHR4izpi7f7aD0iVDU2B8p2KoIzCA9sCGcl9O2RnFDezHbNGgT+yBT+dKVDpTAczhnwZ6eUkQ==}
 
+  '@mysten/bcs@1.2.0':
+    resolution: {integrity: sha512-LuKonrGdGW7dq/EM6U2L9/as7dFwnhZnsnINzB/vu08Xfrj0qzWwpLOiXagAa5yZOPLK7anRZydMonczFkUPzA==}
+
   '@mysten/dapp-kit@0.14.39':
     resolution: {integrity: sha512-GcY68M6P+jvjALqy7U9onrCA25ETNlSlRpfsg5AnPpR0PBymnuVP9yYQMYk1aijFchYWNM4kALlazeLQiV2ldQ==}
     peerDependencies:
       '@tanstack/react-query': ^5.0.0
       react: '*'
+
+  '@mysten/deepbook-v3@0.12.17':
+    resolution: {integrity: sha512-sGkdkLlhOzfo9l1+afCp9KUbhVCz/sE/yiSUxo7xFx1QGXh2NOZzv8oagSb9cz7x2Ool8JzPpOU1ZfVSl4lMmw==}
+    engines: {node: '>=18'}
 
   '@mysten/sui@1.15.1':
     resolution: {integrity: sha512-q8m+xtuh//rHEwEmk6pr7Dguw6/2ySNye2Oy1w6ivbkeRFgqoEE64+fYuMK+lX/SEPhOTEZtN7fp/Trno0KMnw==}
@@ -473,6 +483,10 @@ packages:
 
   '@mysten/sui@1.16.0':
     resolution: {integrity: sha512-KI4richLtbq4RYbv5SmhWMIFD5BRW0tNOSGxZMLxjDBqBwkTqkQ4WBvmxjpbG/2WsLw0SCNrc7JYmoiaB58aLA==}
+    engines: {node: '>=18'}
+
+  '@mysten/sui@1.16.1':
+    resolution: {integrity: sha512-UopFv/D73EIiRpP42BbD3YFAyWCeAnCh1ZS+uuk2aSIS/4+89TWKvWgES23kBdzLSL9/6O9jAP9JRmsZTtvqLw==}
     engines: {node: '>=18'}
 
   '@mysten/wallet-standard@0.13.15':
@@ -2319,6 +2333,10 @@ snapshots:
     dependencies:
       bs58: 6.0.0
 
+  '@mysten/bcs@1.2.0':
+    dependencies:
+      bs58: 6.0.0
+
   '@mysten/dapp-kit@0.14.39(@tanstack/react-query@5.62.0(react@18.3.1))(@types/react-dom@18.3.1)(@types/react@18.3.12)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.6.3)':
     dependencies:
       '@mysten/sui': 1.15.1(typescript@5.6.3)
@@ -2344,6 +2362,14 @@ snapshots:
       - react-dom
       - typescript
 
+  '@mysten/deepbook-v3@0.12.17(typescript@5.6.3)':
+    dependencies:
+      '@mysten/sui': 1.16.1(typescript@5.6.3)
+    transitivePeerDependencies:
+      - '@gql.tada/svelte-support'
+      - '@gql.tada/vue-support'
+      - typescript
+
   '@mysten/sui@1.15.1(typescript@5.6.3)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.9.0)
@@ -2367,6 +2393,27 @@ snapshots:
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.9.0)
       '@mysten/bcs': 1.1.1
+      '@noble/curves': 1.7.0
+      '@noble/hashes': 1.6.1
+      '@scure/bip32': 1.6.0
+      '@scure/bip39': 1.5.0
+      '@suchipi/femver': 1.0.0
+      bech32: 2.0.0
+      gql.tada: 1.8.10(graphql@16.9.0)(typescript@5.6.3)
+      graphql: 16.9.0
+      jose: 5.9.6
+      poseidon-lite: 0.2.1
+      tweetnacl: 1.0.3
+      valibot: 0.36.0
+    transitivePeerDependencies:
+      - '@gql.tada/svelte-support'
+      - '@gql.tada/vue-support'
+      - typescript
+
+  '@mysten/sui@1.16.1(typescript@5.6.3)':
+    dependencies:
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.9.0)
+      '@mysten/bcs': 1.2.0
       '@noble/curves': 1.7.0
       '@noble/hashes': 1.6.1
       '@scure/bip32': 1.6.0
