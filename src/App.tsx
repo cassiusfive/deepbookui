@@ -18,7 +18,6 @@ export default function App() {
           <Account />
         </div>
       </div>
-
       <div className="flex h-screen w-screen border">
         <div className="flex w-5/6 flex-col border-r">
           <div className="flex h-2/3">

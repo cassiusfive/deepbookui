@@ -6,6 +6,7 @@ interface OrderBookEntry {
 }
 
 const ASKS: OrderBookEntry[] = [
+  { price: 0.01901, amount: 242270 },
   { price: 0.01897, amount: 368270 },
   { price: 0.01894, amount: 195650 },
   { price: 0.01891, amount: 47830 },
@@ -24,6 +25,12 @@ const BIDS: OrderBookEntry[] = [
   { price: 0.01872, amount: 48110 },
   { price: 0.01869, amount: 97060 },
   { price: 0.01865, amount: 374590 },
+  { price: 0.01863, amount: 32131 },
+  { price: 0.01862, amount: 2313 },
+  { price: 0.01861, amount: 193402 },
+  { price: 0.01859, amount: 1904 },
+  { price: 0.01856, amount: 19302 },
+  { price: 0.01853, amount: 1102 },
 ];
 
 const MIDPOINT = 0.01881;
