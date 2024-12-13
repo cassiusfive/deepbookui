@@ -1,12 +1,9 @@
 import Pairs from "@/components/pairs";
 import Summary from "@/components/summary";
-import OrderBook from "@/components/orderbook";
-import TradeHistory from "@/components/trade-history";
 import urm from "@/assets/urm.png";
 import Account from "@/components/account";
 import Chart from "@/components/chart";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MarketOverview from "@/components/market-overview";
 
 export default function App() {
   return (
@@ -29,23 +26,7 @@ export default function App() {
               <Chart />
             </div>
             <div className="h-full min-w-fit">
-              <Tabs
-                defaultValue="orderbook"
-                className="flex h-full w-full flex-col"
-              >
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="orderbook">Order book</TabsTrigger>
-                  <TabsTrigger value="trade-history">Trade history</TabsTrigger>
-                </TabsList>
-                <div className="flex h-[9999px] min-h-0 min-w-[260px]">
-                  <TabsContent value="orderbook" className="grow">
-                    <OrderBook />
-                  </TabsContent>
-                  <TabsContent value="trade-history" className="grow">
-                    <TradeHistory />
-                  </TabsContent>
-                </div>
-              </Tabs>
+              <MarketOverview />
             </div>
           </div>
           <div className="flex h-1/3 border-t">user orders</div>
