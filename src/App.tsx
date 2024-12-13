@@ -25,10 +25,10 @@ export default function App() {
       <div className="flex h-screen w-screen border">
         <div className="flex w-5/6 flex-col border-r">
           <div className="flex h-2/3">
-            <div className="flex w-3/4 border-r">
+            <div className="flex min-w-0 grow border-r">
               <Chart />
             </div>
-            <div className="h-full grow">
+            <div className="h-full min-w-fit">
               <Tabs
                 defaultValue="orderbook"
                 className="flex h-full w-full flex-col"
@@ -37,7 +37,7 @@ export default function App() {
                   <TabsTrigger value="orderbook">Order book</TabsTrigger>
                   <TabsTrigger value="trade-history">Trade history</TabsTrigger>
                 </TabsList>
-                <div className="flex h-[9999px] min-h-0">
+                <div className="flex h-[9999px] min-h-0 min-w-[260px]">
                   <TabsContent value="orderbook" className="grow">
                     <OrderBook />
                   </TabsContent>

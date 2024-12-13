@@ -10,6 +10,7 @@ const ASKS: OrderBookEntry[] = [
   { price: 0.01894, amount: 195650 },
   { price: 0.01891, amount: 47830 },
   { price: 0.01889, amount: 370010 },
+  { price: 0.01887, amount: 321310 },
   { price: 0.01888, amount: 43770 },
   { price: 0.01884, amount: 5150 },
   { price: 0.01882, amount: 150 },
@@ -57,7 +58,7 @@ function OrderBookEntries({ entries, type }: OrderBookEntriesProps) {
 export default function OrderBook() {
   return (
     <div className="no-scrollbar h-full min-w-fit overflow-y-auto">
-      <table className="max-h-full w-full">
+      <table className="max-h-full w-full text-sm">
         <thead
           className="sticky top-0 z-20 border-gray-400 bg-gray-200 text-gray-500"
           style={{ boxShadow: "0px 1px 0px rgba(156, 163, 175, 1)" }}

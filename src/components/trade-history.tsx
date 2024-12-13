@@ -27,14 +27,14 @@ function formatTime(date: Date): string {
 export default function TradeHistory() {
   return (
     <div className="no-scrollbar h-full min-w-fit overflow-y-auto">
-      <table className="max-h-full w-full">
+      <table className="max-h-full w-full text-sm">
         <thead
           className="sticky top-0 z-20 border-gray-400 bg-background text-gray-500"
           style={{ boxShadow: "0px 1px 0px rgba(156, 163, 175, 1)" }}
         >
           <tr>
             <th className="w-full text-nowrap pl-2 pr-4 text-right">
-              Amount (DEEP)
+              Amnt. (DEEP)
             </th>
             <th className="w-auto text-nowrap pr-2">Price (SUI)</th>
             <th className="w-auto text-nowrap pr-2">Time</th>
