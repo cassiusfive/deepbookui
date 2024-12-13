@@ -1,12 +1,14 @@
 import Pairs from "@/components/pairs";
 import Summary from "@/components/summary";
 import OrderBook from "@/components/orderbook";
+import TradeHistory from "@/components/trade-history";
 import urm from "@/assets/urm.png";
 import Account from "@/components/account";
 import Chart from "@/components/chart";
 
-export default function App() {
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+export default function App() {
   return (
     <div className="flex h-screen w-screen flex-col font-ubuntu-mono">
       <div className="flex w-screen justify-between">
@@ -20,14 +22,30 @@ export default function App() {
         </div>
       </div>
 
-      <div className="flex w-screen h-screen border">
-        <div className="flex flex-col w-5/6 border-r">
+      <div className="flex h-screen w-screen border">
+        <div className="flex w-5/6 flex-col border-r">
           <div className="flex h-2/3">
             <div className="flex w-3/4 border-r">
               <Chart />
             </div>
-            <div className="grow">
-              <OrderBook />
+            <div className="h-full grow">
+              <Tabs
+                defaultValue="orderbook"
+                className="flex h-full w-full flex-col"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="orderbook">Order book</TabsTrigger>
+                  <TabsTrigger value="trade-history">Trade history</TabsTrigger>
+                </TabsList>
+                <div className="flex h-[9999px] min-h-0">
+                  <TabsContent value="orderbook" className="grow">
+                    <OrderBook />
+                  </TabsContent>
+                  <TabsContent value="trade-history" className="grow">
+                    <TradeHistory />
+                  </TabsContent>
+                </div>
+              </Tabs>
             </div>
           </div>
           <div className="flex h-1/3 border-t">user orders</div>
