@@ -27,7 +27,7 @@ const BIDS: OrderBookEntry[] = [
 
 const MIDPOINT = 0.01881;
 
-interface OrderBookEntriesProps {
+type OrderBookEntriesProps = {
   entries: OrderBookEntry[];
   type: "ask" | "bid";
 }

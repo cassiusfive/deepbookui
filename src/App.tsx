@@ -4,6 +4,7 @@ import OrderBook from "@/components/orderbook";
 import urm from "@/assets/urm.png";
 import Account from "@/components/account";
 import Chart from "@/components/chart";
+import Trade from "@/components/trade";
 
 export default function App() {
 
@@ -32,7 +33,9 @@ export default function App() {
           </div>
           <div className="flex h-1/3 border-t">user orders</div>
         </div>
-        <div className="flex w-1/6">order creation</div>
+        <div className="flex w-1/6">
+          <Trade />
+        </div>
       </div>
     </div>
   );

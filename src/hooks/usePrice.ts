@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import DeepBookMarketMaker from "@/lib/deepbook";
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { useDeepBook } from '@/contexts/deepbook';
 
 export function usePrice() {
 
@@ -8,14 +7,13 @@ export function usePrice() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const deepBook = useDeepBook();
+
   useEffect(() => {
     async function fetchPrice() {
       try {
         setIsLoading(true)
-        const keypair_ed25519 = new Ed25519Keypair();
-        const marketMaker = new DeepBookMarketMaker(keypair_ed25519.getSecretKey(), "mainnet")
-        setPrice(await marketMaker.midPrice("SUI_USDC"))
-
+        setPrice(await deepBook!.midPrice("SUI_USDC"))
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Failed to fetch price"))
       } finally {
