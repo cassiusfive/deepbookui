@@ -96,71 +96,95 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
     }
   }
 
+  async function updateAmount(percent: .25 | .50 | 1) {
+    form.setValue("amount", (percent * baseAssetBalance).toString())
+  }
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="border-b">
-        {orderExecutionType == "limit" && (
+    <div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} id="order" className="flex flex-col gap-3 space-y-8 px-3 py-3">
+          {orderExecutionType == "limit" && (
+            <FormField
+              control={form.control}
+              name="limitPrice"
+              render={({ field }) => (
+                <FormItem className="relative m-0">
+                  <FormLabel className="absolute left-2 top-2 text-xs">LIMIT</FormLabel>
+                  <FormLabel className="absolute right-2 text-xs">USDC</FormLabel>
+                  <FormControl>
+                    <Input 
+                      className="h-8 !mt-0 rounded-sm text-right pr-10 shadow-none hover:border-gray-300 focus:!outline-gray-400 focus:!outline-2 focus:!outline-offset-[-1px] focus:!ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                      type="number" 
+                      placeholder="0.0000" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <div className="flex gap-1 !mt-1">
+                    <Button className="h-8 rounded-sm hover:border-gray-300" variant="outline" type="button" onClick={() => updateLimitPrice("mid")}>MID</Button>
+                    <Button className="h-8 rounded-sm hover:border-gray-300" variant="outline" type="button" onClick={() => updateLimitPrice("bid")}>BID</Button>
+                  </div>
+                  <FormMessage className="text-xs"/>
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={form.control}
-            name="limitPrice"
+            name="amount"
             render={({ field }) => (
-              <FormItem className="relative">
-                <FormLabel className="absolute left-2 top-2.5 text-xs">LIMIT</FormLabel>
-                <FormLabel className="absolute right-2 top-[2px] text-xs">USDC</FormLabel>
+              <FormItem className="relative !m-0">
+                <FormLabel className="absolute left-2 top-2 text-xs">AMOUNT</FormLabel>
+                <FormLabel className="absolute right-2 text-xs">SUI</FormLabel>
                 <FormControl>
                   <Input 
-                    className="text-right pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                    className="h-8 !mt-0 rounded-sm text-right pr-10 shadow-none hover:border-gray-300 focus:!outline-gray-400 focus:!outline-2 focus:!outline-offset-[-1px] focus:!ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
                     type="number" 
                     placeholder="0.0000" 
                     {...field} 
                   />
                 </FormControl>
-                <div className="flex">
-                  <Button variant="outline" type="button" onClick={() => updateLimitPrice("mid")}>MID</Button>
-                  <Button variant="outline" type="button" onClick={() => updateLimitPrice("bid")}>BID</Button>
+                <div className="flex gap-1 !mt-1">
+                  <Button className="h-8 w-1/3 rounded-sm hover:border-gray-300" variant="outline" type="button" onClick={() => updateAmount(0.25)}>25%</Button>
+                  <Button className="h-8 w-1/3 rounded-sm hover:border-gray-300" variant="outline" type="button" onClick={() => updateAmount(0.50)}>50%</Button>
+                  <Button className="h-8 w-1/3 rounded-sm hover:border-gray-300" variant="outline" type="button" onClick={() => updateAmount(1.00)}>MAX</Button>
                 </div>
-                
                 <FormMessage className="text-xs"/>
               </FormItem>
             )}
           />
-        )}
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem className="relative">
-              <FormLabel className="absolute left-2 top-2.5 text-xs">AMOUNT</FormLabel>
-              <FormLabel className="absolute right-2 top-[2px] text-xs">SUI</FormLabel>
-              <FormControl>
-                <Input 
-                  className="text-right pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                  type="number" 
-                  placeholder="0.0000" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage className="text-xs"/>
-            </FormItem>
-          )}
-        />
+        </form>
+      </Form>
+      <div className="flex flex-col gap-3 h-full justify-between border-t p-3 text-xs">
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-gray-500">
+            <div>SUBTOTAL</div>
+            <div>--</div>
+          </div>
+          
+          <div className="flex justify-between text-gray-500">
+            <div>FEE</div>
+            <div>--</div>
+          </div>
+          <div className="flex justify-between">
+            <div>TOTAL</div>
+            <div>--</div>
+          </div>
         </div>
-        <div className="">
-          <Button 
-            className={`w-full ${positionType == "buy" ? "bg-[#26a69a]" : "bg-[#ef5350]"}`} 
-            type="submit"
-            disabled={
-              !form.formState.isValid || 
-              !form.getValues('amount') ||
-              (orderExecutionType === 'limit' && !form.getValues('limitPrice'))
-            }
-          >
-            {positionType == "buy" ? "Buy" : "Sell"} SUI
-          </Button>
-        </div>
-      </form>
-    </Form>
+        <Button 
+          className={`w-full ${positionType == "buy" ? "bg-[#26a69a]" : "bg-[#ef5350]"}`} 
+          type="submit"
+          form="order"
+          disabled={
+            !form.formState.isValid || 
+            !form.getValues('amount') ||
+            (orderExecutionType === 'limit' && !form.getValues('limitPrice'))
+          }
+        >
+          {positionType == "buy" ? "Buy" : "Sell"} SUI
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -184,55 +208,51 @@ export default function Trade() {
   console.log("sui balance", suiBalance, "usdc balance", usdcBalance)
 
   return (
-    <div className="w-full flex flex-col min-w-fit shrink-0">
+    <div className="w-full flex flex-col min-w-fit shrink-0 h-full">
       <div className="p-3 border-b">
-        <h1>Available to trade</h1>
-        <div className="flex justify-between">
+        <h1 className="pb-2">Available to trade</h1>
+        <div className="flex justify-between text-sm">
           <div>SUI</div>
           <div className="text-right">{suiBalance}</div>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between text-sm">
           <div>USDC</div>
           <div className="text-right">${usdcBalance}</div>
         </div>
       </div>
 
-      <Tabs defaultValue="buy">
-        <TabsList className="w-full rounded-none p-0">
+      <Tabs defaultValue="buy" className="h-full">
+        <TabsList className="w-full h-12 rounded-none p-0">
           <TabsTrigger className="w-1/2 rounded-none h-full shadow-none data-[state=active]:shadow-none text-gray-500 data-[state=active]:text-[#26a69a] bg-gray-100 data-[state=active]:bg-gray-200" value="buy" onClick={() => setPositionType("buy")}>Buy</TabsTrigger>
           <TabsTrigger className="w-1/2 rounded-none h-full shadow-none data-[state=active]:shadow-none text-gray-500 data-[state=active]:text-[#ef5350] bg-gray-100 data-[state=active]:bg-gray-200" value="sell" onClick={() => setPositionType("sell")}>Sell</TabsTrigger>
         </TabsList>
-        <TabsContent value="buy">
-          <div className="flex gap-12">
-            <Tabs defaultValue="limit" className="w-full p-3">
-              <TabsList className="w-full bg-transparent justify-between">
-                <TabsTrigger className="w-1/4 text-xs" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
-                <TabsTrigger className="w-1/4 text-xs" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
-              </TabsList>
-              <TabsContent value="limit">
-                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-              </TabsContent>
-              <TabsContent value="market">
-                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-              </TabsContent>
-            </Tabs>
-          </div>
+        <TabsContent value="buy" className="m-0">
+          <Tabs defaultValue="limit" className="w-full py-3">
+            <TabsList className="w-full bg-transparent justify-start gap-3 p-0 pl-3">
+              <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
+              <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
+            </TabsList>
+            <TabsContent value="limit" className="m-0">
+              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+            </TabsContent>
+            <TabsContent value="market" className="m-0">
+              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
-        <TabsContent value="sell">
-          <div className="flex gap-12">
-            <Tabs defaultValue="limit" className="w-full p-3">
-              <TabsList className="w-full bg-transparent justify-between">
-                <TabsTrigger className="w-1/4 text-xs" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
-                <TabsTrigger className="w-1/4 text-xs" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
-              </TabsList>
-              <TabsContent value="limit">
-                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-              </TabsContent>
-              <TabsContent value="market">
-                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-              </TabsContent>
-            </Tabs>
-          </div>
+        <TabsContent value="sell" className="m-0">
+          <Tabs defaultValue="limit" className="w-full py-3">
+            <TabsList className="w-full bg-transparent justify-start gap-3 p-0 pl-3">
+              <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
+              <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
+            </TabsList>
+            <TabsContent value="limit" className="m-0">
+              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+            </TabsContent>
+            <TabsContent value="market" className="m-0">
+              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>

@@ -18,12 +18,12 @@ const networks = {
 };
 
 const keypair_ed25519 = new Ed25519Keypair();
-const dbClient = initializeDeepBook(keypair_ed25519.getSecretKey(), "mainnet");
+const dbClient = initializeDeepBook(keypair_ed25519.getSecretKey(), "testnet");
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networks} defaultNetwork="mainnet">
+      <SuiClientProvider networks={networks} defaultNetwork="devnet">
         <DeepBookProvider client={dbClient}>
           <WalletProvider>
             <App />
