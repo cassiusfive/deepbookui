@@ -15,16 +15,16 @@ export default function App() {
           <Pairs />
           <Summary />
         </div>
-        <div className="flex items-center p-4 shrink">
+        <div className="flex shrink items-center p-4">
           <Account />
         </div>
       </div>
-      
-      <div className="grid h-full w-screen grid-cols-[minmax(0,1fr)_270px_270px] grid-rows-[2fr_1fr]">
-        <div className="col-start-1 col-end-1">
+
+      <div className="grid w-screen grid-cols-[minmax(0,1fr)_270px_270px] grid-rows-[max(60vh,400px)_minmax(100px,1fr)]">
+        <div className="col-start-1 col-end-1 h-full">
           <Chart />
         </div>
-        <div className="h-full col-start-2 col-end-2 border-l">
+        <div className="col-start-2 col-end-2 h-full border-l">
           <MarketOverview />
         </div>
         <div className="col-start-3 col-end-3 row-start-1 row-end-3 border-l">

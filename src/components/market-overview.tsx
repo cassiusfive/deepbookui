@@ -5,15 +5,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function MarketOverview() {
   return (
-    <Tabs defaultValue="orderbook" className="h-full">
-      <TabsList className="w-full rounded-none p-0 bg-transparent border-b py-6 justify-start">
-        <TabsTrigger value="orderbook" className="text-md min-w-min justify-start rounded-none h-full shadow-none data-[state=active]:shadow-none">Order book</TabsTrigger>
-        <TabsTrigger value="trade-history" className="text-md min-w-min justify-start rounded-none h-full shadow-none data-[state=active]:shadow-none">Trade history</TabsTrigger>
+    <Tabs defaultValue="orderbook" className="flex h-full flex-col">
+      <TabsList className="w-full justify-center rounded-none border-b bg-transparent p-0 py-6">
+        <TabsTrigger
+          value="orderbook"
+          className="text-md min-w-min justify-start rounded-none shadow-none data-[state=active]:shadow-none"
+        >
+          Order book
+        </TabsTrigger>
+        <TabsTrigger
+          value="trade-history"
+          className="text-md min-w-min justify-start rounded-none shadow-none data-[state=active]:shadow-none"
+        >
+          Trade history
+        </TabsTrigger>
       </TabsList>
-      <TabsContent value="orderbook" className="w-full m-0 overflow-y-auto max-h-[calc(100vh-240px-81px-49px)] no-scrollbar"> 
+      <TabsContent
+        value="orderbook"
+        className="no-scrollbar m-0 w-full overflow-y-auto"
+      >
         <OrderBook />
       </TabsContent>
-      <TabsContent value="trade-history" className="w-full m-0 overflow-y-auto max-h-[calc(100vh-240px-81px-49px)] no-scrollbar">
+      <TabsContent
+        value="trade-history"
+        className="no-scrollbar m-0 w-full overflow-y-auto"
+      >
         <TradeHistory />
       </TabsContent>
     </Tabs>
