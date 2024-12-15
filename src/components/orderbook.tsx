@@ -33,7 +33,7 @@ const BIDS: OrderBookEntry[] = [
   { price: 0.01853, amount: 1102 },
 ];
 
-const MIDPOINT = 0.01881;
+const SPREAD = (ASKS[8].price - BIDS[0].price).toFixed(5);
 
 type OrderBookEntriesProps = {
   entries: OrderBookEntry[];
@@ -51,41 +51,36 @@ function OrderBookEntries({ entries, type }: OrderBookEntriesProps) {
   return entries.map((entry, index) => (
     <tr key={index}>
       <td className="relative pr-6 text-right">
-        <span className="relative z-10">{entry.amount}</span>
+        <span className="relative">{entry.amount}</span>
         <div
-          className={`absolute top-0 h-full transition-all ${bgColor}`}
+          className={`absolute left-[-1px] top-0 h-full ${bgColor}`}
           style={{ width: `${(entry.amount / totalAmount) * 100}%` }}
-        ></div>
+        />
       </td>
-      <td className={textColor}>{entry.price}</td>
+      <td className={`text-right pr-3 ${textColor}`}>{entry.price}</td>
     </tr>
   ));
 }
 
 export default function OrderBook() {
   return (
-    <div className="no-scrollbar h-full min-w-fit overflow-y-auto">
-      <table className="max-h-full w-full text-sm">
-        <thead
-          className="sticky top-0 z-20 border-gray-400 bg-gray-200 text-gray-500"
-          style={{ boxShadow: "0px 1px 0px rgba(156, 163, 175, 1)" }}
-        >
-          <tr>
-            <th className="w-full text-nowrap pr-6 text-right">
-              Amount (DEEP)
-            </th>
-            <th className="w-auto text-nowrap pr-2">Price (SUI)</th>
-          </tr>
-        </thead>
-        <tbody className="">
-          <OrderBookEntries entries={ASKS} type="ask" />
-          <tr className="border-y border-gray-400">
-            <td className="text-center text-gray-500">Midpoint</td>
-            <td>{MIDPOINT}</td>
-          </tr>
-          <OrderBookEntries entries={BIDS} type="bid" />
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full h-full text-xs">
+      <thead className="h-6 sticky top-0 bg-background z-10 shadow-[0_0_0_1px_rgb(229,231,235)] text-gray-500">
+        <tr>
+          <th className="w-full text-nowrap pr-6 text-right">
+            Amount (DEEP)
+          </th>
+          <th className="w-auto text-nowrap pr-3">Price (SUI)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <OrderBookEntries entries={ASKS} type="ask" />
+        <tr className="border-y h-6">
+          <td className="text-right pr-6 text-gray-500">USD SPREAD</td>
+          <td className="text-right pr-3">{SPREAD}</td>
+        </tr>
+        <OrderBookEntries entries={BIDS} type="bid" />
+      </tbody>
+    </table>
   );
 }

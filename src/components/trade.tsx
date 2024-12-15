@@ -32,7 +32,6 @@ type FormProps = {
 }
 
 function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExecutionType }: FormProps) {
-
   const deepbook = useDeepBook()
   if (!deepbook) return
 
@@ -100,6 +99,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="border-b">
         {orderExecutionType == "limit" && (
           <FormField
             control={form.control}
@@ -145,24 +145,26 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
             </FormItem>
           )}
         />
-        <Button 
-          className={`w-full ${positionType == "buy" ? "bg-[#26a69a]" : "bg-[#ef5350]"}`} 
-          type="submit"
-          disabled={
-            !form.formState.isValid || 
-            !form.getValues('amount') ||
-            (orderExecutionType === 'limit' && !form.getValues('limitPrice'))
-          }
-        >
-          {positionType == "buy" ? "Buy" : "Sell"} SUI
-        </Button>
+        </div>
+        <div className="">
+          <Button 
+            className={`w-full ${positionType == "buy" ? "bg-[#26a69a]" : "bg-[#ef5350]"}`} 
+            type="submit"
+            disabled={
+              !form.formState.isValid || 
+              !form.getValues('amount') ||
+              (orderExecutionType === 'limit' && !form.getValues('limitPrice'))
+            }
+          >
+            {positionType == "buy" ? "Buy" : "Sell"} SUI
+          </Button>
+        </div>
       </form>
     </Form>
   )
 }
 
 export default function Trade() {
-
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
 
@@ -182,9 +184,9 @@ export default function Trade() {
   console.log("sui balance", suiBalance, "usdc balance", usdcBalance)
 
   return (
-    <div className="w-full p-3">
-      <h1>Available to trade</h1>
-      <div className="flex flex-col">
+    <div className="w-full flex flex-col min-w-fit shrink-0">
+      <div className="p-3 border-b">
+        <h1>Available to trade</h1>
         <div className="flex justify-between">
           <div>SUI</div>
           <div className="text-right">{suiBalance}</div>
@@ -193,46 +195,46 @@ export default function Trade() {
           <div>USDC</div>
           <div className="text-right">${usdcBalance}</div>
         </div>
-
-        <Tabs defaultValue="buy" className="">
-          <TabsList className="w-full">
-            <TabsTrigger className="w-1/2" value="buy" onClick={() => setPositionType("buy")}>Buy</TabsTrigger>
-            <TabsTrigger className="w-1/2" value="sell" onClick={() => setPositionType("sell")}>Sell</TabsTrigger>
-          </TabsList>
-          <TabsContent value="buy">
-            <div className="flex justify-center gap-12">
-              <Tabs defaultValue="limit">
-                <TabsList className="w-full bg-transparent justify-between">
-                  <TabsTrigger className="w-1/4 text-xs" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
-                  <TabsTrigger className="w-1/4 text-xs" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
-                </TabsList>
-                <TabsContent value="limit">
-                  <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-                </TabsContent>
-                <TabsContent value="market">
-                  <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </TabsContent>
-          <TabsContent value="sell">
-            <div className="flex justify-center gap-12">
-              <Tabs defaultValue="limit">
-                <TabsList className="w-full bg-transparent justify-between">
-                  <TabsTrigger className="w-1/4 text-xs" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
-                  <TabsTrigger className="w-1/4 text-xs" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
-                </TabsList>
-                <TabsContent value="limit">
-                  <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-                </TabsContent>
-                <TabsContent value="market">
-                  <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </TabsContent>
-        </Tabs>
       </div>
+
+      <Tabs defaultValue="buy">
+        <TabsList className="w-full rounded-none p-0">
+          <TabsTrigger className="w-1/2 rounded-none h-full shadow-none data-[state=active]:shadow-none text-gray-500 data-[state=active]:text-[#26a69a] bg-gray-100 data-[state=active]:bg-gray-200" value="buy" onClick={() => setPositionType("buy")}>Buy</TabsTrigger>
+          <TabsTrigger className="w-1/2 rounded-none h-full shadow-none data-[state=active]:shadow-none text-gray-500 data-[state=active]:text-[#ef5350] bg-gray-100 data-[state=active]:bg-gray-200" value="sell" onClick={() => setPositionType("sell")}>Sell</TabsTrigger>
+        </TabsList>
+        <TabsContent value="buy">
+          <div className="flex gap-12">
+            <Tabs defaultValue="limit" className="w-full p-3">
+              <TabsList className="w-full bg-transparent justify-between">
+                <TabsTrigger className="w-1/4 text-xs" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
+                <TabsTrigger className="w-1/4 text-xs" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
+              </TabsList>
+              <TabsContent value="limit">
+                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              </TabsContent>
+              <TabsContent value="market">
+                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </TabsContent>
+        <TabsContent value="sell">
+          <div className="flex gap-12">
+            <Tabs defaultValue="limit" className="w-full p-3">
+              <TabsList className="w-full bg-transparent justify-between">
+                <TabsTrigger className="w-1/4 text-xs" value="limit" onClick={() => setOrderType("limit")}>LIMIT</TabsTrigger>
+                <TabsTrigger className="w-1/4 text-xs" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
+              </TabsList>
+              <TabsContent value="limit">
+                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              </TabsContent>
+              <TabsContent value="market">
+                <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

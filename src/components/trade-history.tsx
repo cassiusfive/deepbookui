@@ -26,38 +26,31 @@ function formatTime(date: Date): string {
 
 export default function TradeHistory() {
   return (
-    <div className="no-scrollbar h-full min-w-fit overflow-y-auto">
-      <table className="max-h-full w-full text-sm">
-        <thead
-          className="sticky top-0 z-20 border-gray-400 bg-background text-gray-500"
-          style={{ boxShadow: "0px 1px 0px rgba(156, 163, 175, 1)" }}
-        >
-          <tr>
-            <th className="w-full text-nowrap pl-2 pr-4 text-right">
-              Amnt. (DEEP)
+    <table className="w-full text-xs">
+      <thead className="h-6 sticky top-0 bg-background shadow-[0_0_0_1px_rgb(229,231,235)] text-gray-500 text-right ">
+        <tr>
+          <th className="w-full text-nowrap pl-2 pr-4">
+            AMOUNT (DEEP)
+          </th>
+          <th className="w-auto text-nowrap pr-6">AMOUNT (SUI)</th>
+          <th className="w-auto text-nowrap pr-3">TIME</th>
+        </tr>
+      </thead>
+      <tbody>
+        {TRADE_HISTORY.map((trade, index) => (
+          <tr key={index} className="text-right">
+            <th className="text-nowrap pr-4">
+              {trade.amount}
             </th>
-            <th className="w-auto text-nowrap pr-2">Price (SUI)</th>
-            <th className="w-auto text-nowrap pr-2">Time</th>
+            <th className={`text-nowrap pr-6 ${trade.type == "buy" ? "text-[#26a69a]" : "text-[#ef5350]"}`}>
+              {trade.price.toFixed(4)}
+            </th>
+            <th className="text-nowrap pr-3 text-muted-foreground">
+              {formatTime(trade.time)}
+            </th>
           </tr>
-        </thead>
-        <tbody>
-          {TRADE_HISTORY.map((trade, index) => (
-            <tr key={index}>
-              <th className="w-full text-nowrap pr-6 text-right">
-                {trade.amount}
-              </th>
-              <th
-                className={`w-auto text-nowrap pr-2 ${trade.type == "buy" ? "text-[#26a69a]" : "text-[#ef5350]"}`}
-              >
-                {trade.price}
-              </th>
-              <th className="w-auto text-nowrap pr-2 text-muted-foreground">
-                {formatTime(trade.time)}
-              </th>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   );
 }
