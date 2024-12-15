@@ -8,32 +8,29 @@ import MarketOverview from "@/components/market-overview";
 
 export default function App() {
   return (
-    <div className="flex h-screen w-screen flex-col font-ubuntu-mono">
-      <div className="flex w-screen justify-between">
+    <div className="grid h-screen w-screen grid-rows-[auto_1fr] font-ubuntu-mono">
+      <div className="col-start-1 col-end-2 flex justify-between border-b">
         <div className="flex items-center gap-4 p-4">
-          <img src={urm} alt="logo" className="w-12" />
+          <img src={urm} alt="logo" className="w-12 shrink" />
           <Pairs />
           <Summary />
         </div>
-        <div className="flex items-center p-4">
+        <div className="flex items-center p-4 shrink">
           <Account />
         </div>
       </div>
-      <div className="flex h-screen w-screen border">
-        <div className="flex w-5/6 flex-col border-r">
-          <div className="flex h-2/3">
-            <div className="flex min-w-0 grow border-r">
-              <Chart />
-            </div>
-            <div className="h-full min-w-fit">
-              <MarketOverview />
-            </div>
-          </div>
-          <div className="flex h-1/3 border-t">user orders</div>
+      
+      <div className="grid h-full w-screen grid-cols-[minmax(0,1fr)_270px_270px] grid-rows-[2fr_1fr]">
+        <div className="col-start-1 col-end-1">
+          <Chart />
         </div>
-        <div className="flex w-1/6">
+        <div className="h-full col-start-2 col-end-2 border-l">
+          <MarketOverview />
+        </div>
+        <div className="col-start-3 col-end-3 row-start-1 row-end-3 border-l">
           <Trade />
         </div>
+        <div className="col-start-1 col-end-3 border-t">user orders</div>
       </div>
     </div>
   );

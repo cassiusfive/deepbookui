@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { createChart, UTCTimestamp } from "lightweight-charts";
+import { createChart } from "lightweight-charts";
 
 export default function Chart() {
   const container = useRef<HTMLDivElement>(null);
@@ -29,7 +29,7 @@ export default function Chart() {
     });
 
     candlestickSeries.setData([
-      { time: "2018-12-22", open: 75.16, high: 82.84, low: 36.16, close: 45.72 as UTCTimestamp},
+      { time: "2018-12-22", open: 75.16, high: 82.84, low: 36.16, close: 45.72 },
       { time: "2018-12-23", open: 45.12, high: 53.90, low: 45.12, close: 48.09 },
       { time: "2018-12-24", open: 60.71, high: 60.71, low: 53.39, close: 59.29 },
       { time: "2018-12-25", open: 68.26, high: 68.26, low: 59.04, close: 60.50 },
@@ -48,5 +48,5 @@ export default function Chart() {
     }
   }, [])
   
-  return <div ref={container} className="w-full h-full min-h-[400px] cursor-crosshair" />
+  return <div ref={container} className="flex h-full w-full cursor-crosshair" />
 }
