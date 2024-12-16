@@ -1,6 +1,6 @@
 // https://docs.sui.io/standards/deepbookv3-sdk/pools#getlevel2ticksfrommid
 
-interface OrderBookEntry {
+type OrderBookEntry = {
   price: number;
   amount: number;
 }

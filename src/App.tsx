@@ -2,6 +2,7 @@ import Header from "@/components/header";
 import Chart from "@/components/chart";
 import Trade from "@/components/trade";
 import MarketOverview from "@/components/market-overview";
+import User from "@/components/user";
 
 export default function App() {
   return (
@@ -17,7 +18,9 @@ export default function App() {
         <div className="col-start-3 col-end-3 row-start-1 row-end-3 border-l">
           <Trade />
         </div>
-        <div className="col-start-1 col-end-3 border-t">user orders</div>
+        <div className="col-start-1 col-end-3 h-full border-t">
+          <User />
+        </div>
       </div>
     </div>
   );
