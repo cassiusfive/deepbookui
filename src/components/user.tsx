@@ -46,7 +46,7 @@ export default function User() {
   return (
     <div className="h-full">
       <div className="border-b p-4">Orders</div>
-      <div className="h-[200px] overflow-y-auto no-scrollbar">
+      <div className="h-[180px] overflow-y-auto no-scrollbar">
         <Table>
           <TableHeader className="sticky top-0 bg-background shadow-[0_0_0_1px_rgb(229,231,235)] [&_tr]:border-none text-nowrap text-xs">
             <TableRow>
