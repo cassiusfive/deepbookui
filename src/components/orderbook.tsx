@@ -1,6 +1,11 @@
 // https://docs.sui.io/standards/deepbookv3-sdk/pools#getlevel2ticksfrommid
 
 import { useOrderbook, OrderbookEntry } from "@/hooks/useOrderbook";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type OrderbookEntriesProps = {
   entries: OrderbookEntry[];
@@ -9,31 +14,72 @@ type OrderbookEntriesProps = {
 
 function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
   const textColor = type === "ask" ? "text-[#ef5350]" : "text-[#26a69a]";
-  const bgColor = type === "ask" ? "bg-[#ef5350]" : "bg-[#26a69a]";
+  const bgColor = type === "ask" ? "#ef5350" : "#26a69a";
   // it might be nice to create custom utility class for these colors
   // these are the ones from trading view lightweight chart docs
+
+  const aggregateData: {
+    amount: number;
+    value: number;
+    averagePrice: number;
+  }[] = [];
+  entries.reduce(
+    (acc, entry) => {
+      acc.amount += entry.amount;
+      acc.value += entry.amount * entry.price;
+      aggregateData.push({
+        ...acc,
+        averagePrice: acc.value / acc.amount,
+      });
+      return acc;
+    },
+    { amount: 0, value: 0 },
+  );
   if (type === "ask") {
-    entries.sort((a, b) => b.price - a.price);
-  } else {
-    // entries.sort((a, b) => a.price - b.price);
+    entries.reverse();
+    aggregateData.reverse();
   }
 
-  const totalAmount = entries.reduce((sum, entry) => sum + entry.amount, 0);
+  const maxAmount = Math.max(...entries.map((entry) => entry.amount));
 
-  return entries.map((entry, index) => (
-    <tr key={index}>
-      <td className="relative pr-6 text-right">
-        <span className="relative">{entry.amount}</span>
-        <div
-          className={`absolute left-[-1px] top-0 h-full ${bgColor}`}
-          style={{ width: `${(entry.amount / totalAmount) * 100}%` }}
-        />
-      </td>
-      <td className={`pr-3 text-right ${textColor}`}>
-        {entry.price.toFixed(5)}
-      </td>
-    </tr>
-  ));
+  return entries.map((entry, index) => {
+    const barWidth = (entry.amount / maxAmount) * 100;
+
+    return (
+      <Tooltip key={index}>
+        <TooltipTrigger asChild>
+          <tr
+            style={{
+              backgroundImage: `linear-gradient(to right,${bgColor} ${barWidth}%,white ${barWidth}%)`,
+              backgroundBlendMode: "lighten",
+              backgroundColor: "rgba(255,255,255,0.7)",
+            }}
+          >
+            <td className="relative pr-6 text-right">
+              <span className="relative">{entry.amount}</span>
+            </td>
+            <td className={`pr-3 text-right ${textColor}`}>
+              {entry.price.toFixed(5)}
+            </td>
+          </tr>
+        </TooltipTrigger>
+        <TooltipContent side="left" sideOffset={0} className="">
+          <div className="flex w-full justify-between gap-2">
+            <p>Average Price:</p>
+            <p>{aggregateData[index].averagePrice.toFixed(5)}</p>
+          </div>
+          <div className="flex w-full justify-between gap-2">
+            <p>Sum DEEP:</p>
+            <p>{aggregateData[index].amount}</p>
+          </div>
+          <div className="flex w-full justify-between gap-2">
+            <p>Sum SUI:</p>
+            <p>{aggregateData[index].value.toFixed(5)}</p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    );
+  });
 }
 
 export default function OrderBook() {

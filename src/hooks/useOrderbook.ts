@@ -15,7 +15,7 @@ type OrderbookInfo = {
 
 async function fetchOrderbookInfo(
   poolId: string,
-  depth: number = 20,
+  depth: number = 30,
 ): Promise<OrderbookInfo> {
   const data = await deepbookApiClient(`/orderbook/${poolId}?depth=${depth}`);
 
