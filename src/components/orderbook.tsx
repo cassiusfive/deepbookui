@@ -35,14 +35,12 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
     },
     { amount: 0, value: 0 },
   );
-  if (type === "ask") {
-    entries.reverse();
-    aggregateData.reverse();
-  }
 
   const maxAmount = Math.max(...entries.map((entry) => entry.amount));
+  const displayedEntries = type === "ask" ? entries.slice().reverse() : entries;
+  if (type === "ask") aggregateData.reverse();
 
-  return entries.map((entry, index) => {
+  return displayedEntries.map((entry, index) => {
     const barWidth = (entry.amount / maxAmount) * 100;
 
     return (
