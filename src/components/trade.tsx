@@ -19,19 +19,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useContract } from "@/contexts/contract";
 
 
 type PositionType = "buy" | "sell"
 type OrderExecutionType = "limit" | "market"
 
 type FormProps = {
+  baseAsset: string
+  quoteAsset: string
   baseAssetBalance: number
   quoteAssetBalance: number
   positionType: PositionType
   orderExecutionType: OrderExecutionType
 }
 
-function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExecutionType }: FormProps) {
+function OrderForm({ baseAsset, quoteAsset, baseAssetBalance, quoteAssetBalance, positionType, orderExecutionType }: FormProps) {
   const deepbook = useDeepBook()
   if (!deepbook) return
 
@@ -52,7 +55,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
     if (positionType == "buy" && parseInt(data.amount) * (parseInt(data.limitPrice) || 4.6) > quoteAssetBalance) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Insufficient USDC balance",
+        message: `Insufficient ${quoteAsset} balance`,
         path: ["amount"],
       });
     }
@@ -60,7 +63,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
     if (positionType == "sell" && parseInt(data.amount) > baseAssetBalance) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Insufficient SUI balance",
+        message: `Insufficient ${baseAsset} balance`,
         path: ["amount"],
       });
     }
@@ -77,7 +80,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
 
   useEffect(() => {
     (async function() {
-      const price = await deepbook.midPrice("SUI_USDC")
+      const price = await deepbook.midPrice(`${baseAsset}_${quoteAsset}`)
       form.setValue("limitPrice", price.toFixed(4))
     })();
   }, [])
@@ -88,7 +91,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
 
   async function updateLimitPrice(type: "bid" | "mid") {
     if (type == "mid") {
-      const price = await deepbook!.midPrice("SUI_USDC")
+      const price = await deepbook!.midPrice(`${baseAsset}_${quoteAsset}`)
       form.setValue("limitPrice", price.toFixed(4))
     } else {
       // fetch highest bid
@@ -111,7 +114,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
               render={({ field }) => (
                 <FormItem className="relative m-0">
                   <FormLabel className="absolute left-2 top-2 text-xs">LIMIT</FormLabel>
-                  <FormLabel className="absolute right-2 text-xs">USDC</FormLabel>
+                  <FormLabel className="absolute right-2 text-xs">{quoteAsset}</FormLabel>
                   <FormControl>
                     <Input 
                       className="h-8 !mt-0 rounded-sm text-right pr-10 shadow-none hover:border-gray-300 focus:!outline-gray-400 focus:!outline-2 focus:!outline-offset-[-1px] focus:!ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
@@ -135,7 +138,7 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
             render={({ field }) => (
               <FormItem className="relative !m-0">
                 <FormLabel className="absolute left-2 top-2 text-xs">AMOUNT</FormLabel>
-                <FormLabel className="absolute right-2 text-xs">SUI</FormLabel>
+                <FormLabel className="absolute right-2 text-xs">{baseAsset}</FormLabel>
                 <FormControl>
                   <Input 
                     className="h-8 !mt-0 rounded-sm text-right pr-10 shadow-none hover:border-gray-300 focus:!outline-gray-400 focus:!outline-2 focus:!outline-offset-[-1px] focus:!ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
@@ -189,8 +192,13 @@ function OrderForm({ baseAssetBalance, quoteAssetBalance, positionType, orderExe
 }
 
 export default function Trade() {
+  const contractContext = useContract()
+  if (!contractContext) return
+
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
+
+  var baseAssetBalance, quoteAssetBalance;
 
   const account = useCurrentAccount()
 
@@ -199,25 +207,34 @@ export default function Trade() {
     { enabled: !!account }
   );
 
-  const sui = data?.find(coin => coin.coinType == "0x2::sui::SUI")
-  const usdc = data?.find(coin => coin.coinType == "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC")
+  if (!account) {
+    baseAssetBalance = 0
+    quoteAssetBalance = 0
+  } else {
+    if (isLoading) return <div></div>
+    if (error) console.log(error)
+    if (!data) return <div>failed to fetch balance</div>
 
-  const suiBalance = sui ? parseInt(sui.totalBalance) / 1000000000 : 0
-  const usdcBalance = usdc ? parseInt(usdc.totalBalance) / 1000000000 : 0
+    const baseAsset = data.find(coin => coin.coinType == contractContext.baseAsset.baseAssetId)
+    const quoteAsset = data.find(coin => coin.coinType == contractContext.quoteAsset.quoteAssetId)
 
-  console.log("sui balance", suiBalance, "usdc balance", usdcBalance)
+    baseAssetBalance = baseAsset ? parseInt(baseAsset.totalBalance) / 1000000000 : 0
+    quoteAssetBalance = quoteAsset ? parseInt(quoteAsset.totalBalance) / 1000000000 : 0
+  }
+
+  console.log("base asset balance", baseAssetBalance, "quote asset balance", quoteAssetBalance)
 
   return (
     <div className="w-full flex flex-col min-w-fit shrink-0 h-full">
       <div className="p-3 border-b">
         <h1 className="pb-2">Available to trade</h1>
         <div className="flex justify-between text-sm">
-          <div>SUI</div>
-          <div className="text-right">{suiBalance}</div>
+          <div>{contractContext.baseAsset.baseAssetSymbol}</div>
+          <div className="text-right">{quoteAssetBalance}</div>
         </div>
         <div className="flex justify-between text-sm">
-          <div>USDC</div>
-          <div className="text-right">${usdcBalance}</div>
+          <div>{contractContext.quoteAsset.quoteAssetSymbol}</div>
+          <div className="text-right">${quoteAssetBalance}</div>
         </div>
       </div>
 
@@ -233,10 +250,10 @@ export default function Trade() {
               <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
             </TabsList>
             <TabsContent value="limit" className="m-0">
-              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
             <TabsContent value="market" className="m-0">
-              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
           </Tabs>
         </TabsContent>
@@ -247,10 +264,10 @@ export default function Trade() {
               <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
             </TabsList>
             <TabsContent value="limit" className="m-0">
-              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
             <TabsContent value="market" className="m-0">
-              <OrderForm baseAssetBalance={suiBalance} quoteAssetBalance={usdcBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
           </Tabs>
         </TabsContent>

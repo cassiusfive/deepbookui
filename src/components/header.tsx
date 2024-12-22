@@ -1,9 +1,10 @@
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit";
+import { Link } from "@tanstack/react-router";
 import shallowLogo from "@/assets/shallow.svg"
+import { getTokenImage } from "@/utils/token-images";
 import { Settings, Sun, Moon } from "lucide-react";
 import { useContract } from '@/contexts/contract';
 import { usePrice } from "@/hooks/usePrice";
-import { usePools } from "@/hooks/usePools";
 import { useSummary } from "@/hooks/useSummary";
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -20,46 +21,44 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-import sui from "@/assets/sui-symbol.png";
-import usdc from "@/assets/usdc.png";
-
-import { Pair, columns } from "./pairs/columns"
+import { columns } from "./pairs/columns"
 import { DataTable } from "./pairs/data-table"
 
 
 export default function Navbar() {
+  const contractContext = useContract()
+  if (!contractContext) return
 
-  const contractAddress = useContract()
-  if (!contractAddress) return <div>no ca</div>
+  const { data: summary, isLoading: isSummaryLoading } = useSummary();
+  const { data: price, isLoading: isPriceLoading } = usePrice(contractContext.poolKey);
 
   const account = useCurrentAccount();
   if (account) console.log(`connected to ${account.address}`);
 
-  const { data: pools, isLoading: isPoolsLoading } = usePools();
-  const { data: summary, isLoading: isSummaryLoading } = useSummary();
-  const { data: price, isLoading: isPriceLoading, error } = usePrice(contractAddress);
+  if (isSummaryLoading || isPriceLoading) return <div className="border-b"></div>
+  if (!summary) return <div className="border-b">failed to load pairs</div>
 
-  console.log(price, isPriceLoading, error)
+  const pool = summary.find(pool => pool.trading_pairs == `${contractContext.baseAsset.baseAssetSymbol}_${contractContext.quoteAsset.quoteAssetSymbol}`)
+  const baseLogo = getTokenImage(contractContext.baseAsset.baseAssetSymbol)
+  const quoteLogo = getTokenImage(contractContext.quoteAsset.quoteAssetSymbol)
 
-  if (isPoolsLoading || isSummaryLoading || isPriceLoading) {
-    return <div className="flex w-full items-center justify-between p-4 border-b"></div>
-  }
+  if (!pool) return <div className="border-b">failed to find pool</div>
 
   return (
     <div className="flex w-full items-center justify-between p-4 border-b">
       <div className="flex gap-8">
-        <a href="/" className="flex items-center gap-2">
+        <Link to="/trade/$contractAddress" params={{ contractAddress: "0xb663828d6217467c8a1838a03793da896cbe745b150ebd57d82f814ca579fc22" }} className="flex items-center gap-2">
           <img src={shallowLogo} className="w-6 h-6" />
           <span>Shallow</span>
-        </a>
+        </Link>
         <Sheet>
           <SheetTrigger>
             <div className="flex items-center justify-center gap-2 rounded-full bg-gray-200 px-3 py-2">
               <div className="flex">
-                <img src={sui} alt="SUI symbol" className="z-10 w-6" />
-                <img src={usdc} alt="USDC symbol" className="ml-[-8px] w-6" />
+                <img src={baseLogo} alt={`${contractContext.baseAsset.baseAssetSymbol} symbol`} className="z-10 w-6" />
+                <img src={quoteLogo} alt={`${contractContext.quoteAsset.quoteAssetSymbol} symbol`} className="ml-[-8px] w-6" />
               </div>
-              <div className="whitespace-nowrap">SUI-USD</div>
+              <div className="whitespace-nowrap">{`${contractContext.baseAsset.baseAssetSymbol}-${contractContext.quoteAsset.quoteAssetSymbol}`}</div>
             </div>
           </SheetTrigger>
           <SheetContent className="top-[80px] w-[330px]" side="left">
@@ -72,19 +71,19 @@ export default function Navbar() {
         <div className="flex gap-8">
           <div className="flex flex-col">
             <div className="text-gray-500 text-sm">LAST PRICE (24H)</div>
-            <div className="">${price} <span className="text-red-500">-10.29%</span></div>
+            <div className="">${price} <span className="text-red-500">{pool.price_change_percent_24h.toFixed(2)}%</span></div>
           </div>
           <div className="flex flex-col">
             <div className="text-sm text-gray-500">24H VOLUME</div>
-            <div className="">$144,299,494.98465</div>
+            <div className="">${(pool.base_volume + pool.quote_volume).toFixed(0)}</div>
           </div>
           <div className="flex flex-col">
             <div className="text-sm text-gray-500">24H HIGH</div>
-            <div className="">$4.27360</div>
+            <div className="">${pool.highest_price_24h.toFixed(4)}</div>
           </div>
           <div className="flex flex-col">
             <div className="text-sm text-gray-500">24H LOW</div>
-            <div className="">$3.36130</div>
+            <div className="">${pool.lowest_price_24h.toFixed(4)}</div>
           </div>
         </div>
       </div>

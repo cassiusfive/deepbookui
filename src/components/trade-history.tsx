@@ -1,3 +1,5 @@
+import { useContract } from "@/contexts/contract";
+
 type Trade = {
   amount: number;
   price: number;
@@ -25,14 +27,15 @@ function formatTime(date: Date): string {
 }
 
 export default function TradeHistory() {
+  const contractContext = useContract();
+  if (!contractContext) return
+
   return (
     <table className="w-full text-xs">
       <thead className="h-6 sticky top-0 bg-background shadow-[0_0_0_1px_rgb(229,231,235)] text-gray-500 text-right">
         <tr>
-          <th className="w-full text-nowrap pl-2 pr-4">
-            AMOUNT (DEEP)
-          </th>
-          <th className="w-auto text-nowrap pr-6">AMOUNT (SUI)</th>
+          <th className="w-full text-nowrap pl-2 pr-4">{`AMOUNT (${contractContext.baseAsset.baseAssetSymbol})`}</th>
+          <th className="w-auto text-nowrap pr-6">{`AMOUNT (${contractContext.quoteAsset.quoteAssetSymbol})`}</th>
           <th className="w-auto text-nowrap pr-3">TIME</th>
         </tr>
       </thead>
