@@ -1,16 +1,29 @@
 import { createContext, useContext, ReactNode } from "react";
 
-const ContractContext = createContext<string | null>(null)
+export type ContractContextType = {
+  contractAddress: string,
+  poolKey: string
+  baseAsset: {
+    baseAssetId: string,
+    baseAssetSymbol: string
+  },
+  quoteAsset: {
+    quoteAssetId: string,
+    quoteAssetSymbol: string
+  }
+}
+
+const ContractContext = createContext<ContractContextType | null>(null)
 
 export function ContractProvider({ 
   children, 
-  contractAddress 
+  contractContext 
 }: { 
   children: ReactNode, 
-  contractAddress: string 
+  contractContext: ContractContextType 
 }) {
   return (
-    <ContractContext.Provider value={contractAddress}>
+    <ContractContext.Provider value={contractContext}>
       {children}
     </ContractContext.Provider>
   )

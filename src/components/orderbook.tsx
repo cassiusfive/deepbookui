@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useContract } from "@/contexts/contract";
 
 type OrderbookEntriesProps = {
   entries: OrderbookEntry[];
@@ -81,22 +82,20 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
 }
 
 export default function OrderBook() {
-  const { data, isLoading } = useOrderbook("DEEP_SUI");
+  const contractContext = useContract();
+  if (!contractContext) return
 
-  if (isLoading) {
-    return <p>Loading</p>;
-  }
+  const { data, isLoading } = useOrderbook(contractContext.poolKey);
 
-  if (!data) {
-    return <p>Error</p>;
-  }
+  if (isLoading) return <div></div>;
+  if (!data) return <div>Error</div>;
 
   return (
     <table className="h-full w-full text-xs">
       <thead className="sticky top-0 z-10 h-6 bg-background text-gray-500 shadow-[0_0_0_1px_rgb(229,231,235)]">
         <tr>
-          <th className="w-full text-nowrap pr-6 text-right">Amount (DEEP)</th>
-          <th className="w-auto text-nowrap pr-3">Price (SUI)</th>
+          <th className="w-full text-nowrap pr-6 text-right">{`Amount (${contractContext.baseAsset.baseAssetSymbol})`}</th>
+          <th className="w-auto text-nowrap pr-3">{`Price (${contractContext.quoteAsset.quoteAssetSymbol})`}</th>
         </tr>
       </thead>
       <tbody>

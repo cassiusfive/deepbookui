@@ -17,8 +17,6 @@ export type Pair = {
 
 async function fetchSummary(): Promise<Pair[]> {
   const data = await deepbookApiClient(`/summary`);
-
-  console.log(data)
   return data
 }
 
