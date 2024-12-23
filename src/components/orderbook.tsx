@@ -83,11 +83,9 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
 
 export default function OrderBook() {
   const contractContext = useContract();
-  if (!contractContext) return;
+  const { data, isLoading } = useOrderbook(contractContext?.poolKey);
 
-  const { data, isLoading } = useOrderbook(contractContext.poolKey);
-
-  if (isLoading) return <div></div>;
+  if (isLoading || !contractContext) return <div></div>;
   if (!data) return <div>Error</div>;
 
   return (
