@@ -11,8 +11,16 @@ import { initializeDeepBook } from "@/lib/deepbook/client";
 import { DeepBookProvider } from "@/contexts/deepbook";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { useTheme, ThemeProvider } from '@/contexts/theme';
+import { lightTheme } from "@/theme/light";
+import { darkTheme } from "@/theme/dark";
 import "@mysten/dapp-kit/dist/index.css";
 import "./index.css";
+
+const themes = {
+  "light": lightTheme,
+  "dark": darkTheme
+}
 
 export const rootRoute = createRootRoute({
   component: () => <Outlet />  // This renders child routes
@@ -45,16 +53,27 @@ const dbClient = initializeDeepBook(keypair_ed25519.getSecretKey(), "mainnet");
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networks} defaultNetwork="mainnet">
-        <DeepBookProvider client={dbClient}>
-          <WalletProvider>
-            <TooltipProvider delayDuration={0}>
-              <RouterProvider router={router} />
-            </TooltipProvider>
-          </WalletProvider>
-        </DeepBookProvider>
-      </SuiClientProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <QueryClientProvider client={queryClient}>
+        <SuiClientProvider networks={networks} defaultNetwork="mainnet">
+          <DeepBookProvider client={dbClient}>
+            <WalletProviderWrapper>
+              <TooltipProvider delayDuration={0}>
+                <RouterProvider router={router} />
+              </TooltipProvider>
+            </WalletProviderWrapper>
+          </DeepBookProvider>
+        </SuiClientProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>,
 );
+
+function WalletProviderWrapper({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
+  return (
+    <WalletProvider theme={themes[theme]}>
+      {children}
+    </WalletProvider>
+  );
+}
