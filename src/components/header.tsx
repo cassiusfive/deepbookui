@@ -99,13 +99,13 @@ export default function Navbar() {
                 <h2>Theme</h2>
                 <p className="pb-4 text-xs text-gray-500">Change the theme of the application</p>
                 <div className="flex items-center gap-2">
-                  <Moon className="w-4"/>
+                  <Sun className="w-4"/>
                   <Switch 
                     checked={theme === "dark"}
                     onCheckedChange={toggleTheme}
                     aria-label="Toggle theme"
                   />
-                  <Sun className="w-4"/>
+                  <Moon className="w-4"/>
                 </div>
               </div>
               <div>
