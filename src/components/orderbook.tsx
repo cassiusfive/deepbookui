@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useContract } from "@/contexts/contract";
+import { useState } from "react";
 
 type OrderbookEntriesProps = {
   entries: OrderbookEntry[];
@@ -14,8 +15,11 @@ type OrderbookEntriesProps = {
 };
 
 function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   const textColor = type === "ask" ? "text-[#ef5350]" : "text-[#26a69a]";
-  const bgColor = type === "ask" ? "#ef5350" : "#26a69a";
+  const bgColor =
+    type === "ask" ? "rgba(239, 83, 80, 0.3)" : "rgba(38, 166, 154, 0.3)";
   // it might be nice to create custom utility class for these colors
   // these are the ones from trading view lightweight chart docs
 
@@ -38,20 +42,28 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
   );
 
   const maxAmount = Math.max(...entries.map((entry) => entry.amount));
+
+  if (type === "ask") {
+    aggregateData.reverse();
+  }
+
   const displayedEntries = type === "ask" ? entries.slice().reverse() : entries;
-  if (type === "ask") aggregateData.reverse();
 
   return displayedEntries.map((entry, index) => {
     const barWidth = (entry.amount / maxAmount) * 100;
+    const highlighted =
+      hoveredIndex !== null &&
+      (type === "ask" ? hoveredIndex <= index : hoveredIndex >= index);
 
     return (
       <Tooltip key={index}>
         <TooltipTrigger asChild>
           <tr
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
             style={{
-              backgroundImage: `linear-gradient(to right,${bgColor} ${barWidth}%,white ${barWidth}%)`,
-              backgroundBlendMode: "lighten",
-              backgroundColor: "rgba(255,255,255,0.7)",
+              backgroundImage: `linear-gradient(to right,${bgColor} ${barWidth}%,transparent ${barWidth}%)`,
+              backgroundColor: highlighted ? "rgba(0,0,0, 0.05)" : "",
             }}
           >
             <td className="relative pr-6 text-right">
@@ -83,11 +95,9 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
 
 export default function OrderBook() {
   const contractContext = useContract();
-  if (!contractContext) return
+  const { data, isLoading } = useOrderbook(contractContext?.poolKey);
 
-  const { data, isLoading } = useOrderbook(contractContext.poolKey);
-
-  if (isLoading) return <div></div>;
+  if (isLoading || !contractContext) return <div></div>;
   if (!data) return <div>Error</div>;
 
   return (

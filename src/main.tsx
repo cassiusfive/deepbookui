@@ -1,6 +1,13 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { RouterProvider, Outlet, createRouter, createRootRoute, createRoute } from '@tanstack/react-router'
+import {
+  RouterProvider,
+  Outlet,
+  createRouter,
+  createRootRoute,
+  createRoute,
+  Navigate,
+} from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SuiClientProvider, WalletProvider } from "@mysten/dapp-kit";
 import { getFullnodeUrl } from "@mysten/sui/client";
@@ -23,22 +30,36 @@ const themes = {
 }
 
 export const rootRoute = createRootRoute({
-  component: () => <Outlet />  // This renders child routes
-})
+  component: () => <Outlet />, // This renders child routes
+});
+
+const redirectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: () => (
+    <Navigate
+      to="/trade/$contractAddress"
+      params={{
+        contractAddress:
+          "0xb663828d6217467c8a1838a03793da896cbe745b150ebd57d82f814ca579fc22",
+      }}
+    />
+  ),
+});
 
 const tradingRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: 'trade/$contractAddress',
-  component: Terminal
-})
+  path: "trade/$contractAddress",
+  component: Terminal,
+});
 
-const routeTree = rootRoute.addChildren([tradingRoute])
+const routeTree = rootRoute.addChildren([redirectRoute, tradingRoute]);
 
-const router = createRouter({ routeTree })
+const router = createRouter({ routeTree });
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: typeof router
+    router: typeof router;
   }
 }
 
