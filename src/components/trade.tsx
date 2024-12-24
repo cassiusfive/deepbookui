@@ -99,8 +99,12 @@ function OrderForm({ baseAsset, quoteAsset, baseAssetBalance, quoteAssetBalance,
     }
   }
 
-  async function updateAmount(percent: .25 | .50 | 1) {
-    form.setValue("amount", (percent * baseAssetBalance).toString())
+  function updateAmount(percent: .25 | .50 | 1) {
+    if (positionType == "buy") {
+      form.setValue("amount", (percent * quoteAssetBalance).toFixed(4).toString())
+    } else {
+      form.setValue("amount", (percent * baseAssetBalance).toFixed(4).toString())
+    }
   }
 
   return (
@@ -215,8 +219,20 @@ export default function Trade() {
     if (error) console.log(error)
     if (!data) return <div>failed to fetch balance</div>
 
-    const baseAsset = data.find(coin => coin.coinType == contractContext.baseAsset.baseAssetId)
-    const quoteAsset = data.find(coin => coin.coinType == contractContext.quoteAsset.quoteAssetId)
+    // normalize pool id
+    const baseAsset = data.find(coin => {
+      const [address, ...rest] = contractContext.baseAsset.baseAssetId.split("::");
+      const normalizedAddress = BigInt(address).toString(16);
+      console.log(`0x${normalizedAddress}::${rest.join("::")}`)
+      return `0x${normalizedAddress}::${rest.join("::")}` == coin.coinType
+    })
+    
+    const quoteAsset = data.find(coin => {
+      const [address, ...rest] = contractContext.quoteAsset.quoteAssetId.split("::");
+      const normalizedAddress = BigInt(address).toString(16);
+      console.log(`0x${normalizedAddress}::${rest.join("::")}`)
+      return `0x${normalizedAddress}::${rest.join("::")}` == coin.coinType
+    })
 
     baseAssetBalance = baseAsset ? parseInt(baseAsset.totalBalance) / 1000000000 : 0
     quoteAssetBalance = quoteAsset ? parseInt(quoteAsset.totalBalance) / 1000000000 : 0
@@ -230,11 +246,11 @@ export default function Trade() {
         <h1 className="pb-2">Available to trade</h1>
         <div className="flex justify-between text-sm">
           <div>{contractContext.baseAsset.baseAssetSymbol}</div>
-          <div className="text-right">{quoteAssetBalance}</div>
+          <div className="text-right">{baseAssetBalance.toFixed(4)}</div>
         </div>
         <div className="flex justify-between text-sm">
           <div>{contractContext.quoteAsset.quoteAssetSymbol}</div>
-          <div className="text-right">${quoteAssetBalance}</div>
+          <div className="text-right">${quoteAssetBalance.toFixed(4)}</div>
         </div>
       </div>
 
@@ -250,10 +266,10 @@ export default function Trade() {
               <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
             </TabsList>
             <TabsContent value="limit" className="m-0">
-              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={baseAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
             <TabsContent value="market" className="m-0">
-              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={baseAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
           </Tabs>
         </TabsContent>
@@ -264,10 +280,10 @@ export default function Trade() {
               <TabsTrigger className="w-1/4 text-xs shadow-none data-[state=active]:shadow-none data-[state=active]:bg-gray-100" value="market" onClick={() => setOrderType("market")}>MARKET</TabsTrigger>
             </TabsList>
             <TabsContent value="limit" className="m-0">
-              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={baseAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
             <TabsContent value="market" className="m-0">
-              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={quoteAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
+              <OrderForm baseAsset={contractContext.baseAsset.baseAssetSymbol} quoteAsset={contractContext.quoteAsset.quoteAssetSymbol} baseAssetBalance={baseAssetBalance} quoteAssetBalance={quoteAssetBalance} positionType={positionType} orderExecutionType={orderType} />
             </TabsContent>
           </Tabs>
         </TabsContent>
