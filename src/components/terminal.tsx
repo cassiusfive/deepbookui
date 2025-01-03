@@ -66,7 +66,7 @@ export default function Terminal() {
 
   // fetch pool from harcoded pools or from api
   function getSelectedPool() {
-    var pool = defaultPools.find(pool => pool.pool_id == contractAddress)
+    const pool = defaultPools.find(pool => pool.pool_id == contractAddress)
     if (pool) return pool
     return data?.find(pool => pool.pool_id == contractAddress)
   }
