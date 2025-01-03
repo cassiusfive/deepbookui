@@ -18,16 +18,16 @@ import { initializeDeepBook } from "@/lib/deepbook/client";
 import { DeepBookProvider } from "@/contexts/deepbook";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { useTheme, ThemeProvider } from '@/contexts/theme';
+import { useTheme, ThemeProvider } from "@/contexts/theme";
 import { lightTheme } from "@/theme/light";
 import { darkTheme } from "@/theme/dark";
 import "@mysten/dapp-kit/dist/index.css";
 import "./index.css";
 
 const themes = {
-  "light": lightTheme,
-  "dark": darkTheme
-}
+  light: lightTheme,
+  dark: darkTheme,
+};
 
 export const rootRoute = createRootRoute({
   component: () => <Outlet />, // This renders child routes
@@ -92,9 +92,5 @@ createRoot(document.getElementById("root")!).render(
 
 function WalletProviderWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
-  return (
-    <WalletProvider theme={themes[theme]}>
-      {children}
-    </WalletProvider>
-  );
+  return <WalletProvider theme={themes[theme]}>{children}</WalletProvider>;
 }

@@ -8,7 +8,7 @@ export function DeepBookProvider({
   client,
 }: {
   children: ReactNode;
-  client: DeepBookMarketMaker
+  client: DeepBookMarketMaker;
 }) {
   return (
     <DeepBookContext.Provider value={client}>
@@ -19,5 +19,5 @@ export function DeepBookProvider({
 
 export function useDeepBook() {
   const context = useContext(DeepBookContext);
-  return context
+  return context;
 }

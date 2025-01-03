@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useDeepBook } from '@/contexts/deepbook';
+import { useDeepBook } from "@/contexts/deepbook";
 
 export function usePrice(poolId: string) {
   const deepBook = useDeepBook();
@@ -8,12 +8,12 @@ export function usePrice(poolId: string) {
     queryKey: ["price", poolId],
     queryFn: async () => {
       if (!deepBook) throw new Error("DeepBook not initialized");
-      return deepBook.midPrice(poolId)
+      return deepBook.midPrice(poolId);
     },
     refetchInterval: 1000,
     onError: (error) => {
-      console.error('Failed to fetch price:', error);
+      console.error("Failed to fetch price:", error);
     },
     keepPreviousData: true,
-  })
+  });
 }

@@ -5,7 +5,7 @@ type Trade = {
   price: number;
   type: "buy" | "sell";
   time: Date;
-}
+};
 
 const TRADE_HISTORY: Trade[] = [];
 for (let i = 0; i < 50; i++) {
@@ -28,11 +28,11 @@ function formatTime(date: Date): string {
 
 export default function TradeHistory() {
   const contractContext = useContract();
-  if (!contractContext) return
+  if (!contractContext) return;
 
   return (
     <table className="w-full text-xs">
-      <thead className="h-6 sticky top-0 bg-background shadow-[0_0_0_1px_rgb(229,231,235)] text-gray-500 text-right">
+      <thead className="sticky top-0 h-6 bg-background text-right text-gray-500 shadow-[0_0_0_1px_rgb(229,231,235)]">
         <tr>
           <th className="w-full text-nowrap pl-2 pr-4">{`AMOUNT (${contractContext.baseAsset.baseAssetSymbol})`}</th>
           <th className="w-auto text-nowrap pr-6">{`AMOUNT (${contractContext.quoteAsset.quoteAssetSymbol})`}</th>
@@ -42,10 +42,10 @@ export default function TradeHistory() {
       <tbody>
         {TRADE_HISTORY.map((trade, index) => (
           <tr key={index} className="text-right">
-            <th className="text-nowrap pr-4">
-              {trade.amount}
-            </th>
-            <th className={`text-nowrap pr-6 ${trade.type == "buy" ? "text-[#26a69a]" : "text-[#ef5350]"}`}>
+            <th className="text-nowrap pr-4">{trade.amount}</th>
+            <th
+              className={`text-nowrap pr-6 ${trade.type == "buy" ? "text-[#26a69a]" : "text-[#ef5350]"}`}
+            >
               {trade.price.toFixed(4)}
             </th>
             <th className="text-nowrap pr-3 text-muted-foreground">
