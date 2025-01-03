@@ -9,6 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "lint-staged": {
+    "*.ts": [
+      "prettier --write",
+      "eslint"
+    ]
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@mysten/dapp-kit": "^0.14.39",
