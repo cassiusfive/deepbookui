@@ -1,1 +1,1 @@
-pnpm test
+prettier --write .
