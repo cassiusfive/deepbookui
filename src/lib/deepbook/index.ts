@@ -1,68 +1,43 @@
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
-import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
-import type { Keypair } from "@mysten/sui/cryptography";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { SuiClient } from "@mysten/sui/client";
 import type { Transaction } from "@mysten/sui/transactions";
 
 import { DeepBookClient } from "@mysten/deepbook-v3";
 import type { BalanceManager } from "@mysten/deepbook-v3";
 
 export default class DeepBookMarketMaker extends DeepBookClient {
-  keypair: Keypair;
   suiClient: SuiClient;
 
   constructor(
-    keypair: string | Keypair,
+    address: string,
     env: "testnet" | "mainnet",
+    suiClient: SuiClient,
     balanceManagers?: { [key: string]: BalanceManager },
     adminCap?: string,
   ) {
-    let resolvedKeypair: Keypair;
-
-    if (typeof keypair === "string") {
-      resolvedKeypair = DeepBookMarketMaker.#getSignerFromPK(keypair);
-    } else {
-      resolvedKeypair = keypair;
-    }
-
-    const address = resolvedKeypair.toSuiAddress();
-
     super({
       address: address,
       env: env,
-      client: new SuiClient({
-        url: getFullnodeUrl(env),
-      }),
+      client: suiClient,
       balanceManagers: balanceManagers,
       adminCap: adminCap,
     });
 
-    this.keypair = resolvedKeypair;
-    this.suiClient = new SuiClient({
-      url: getFullnodeUrl(env),
-    });
+    this.suiClient = suiClient;
   }
 
-  static #getSignerFromPK = (privateKey: string) => {
-    const { schema, secretKey } = decodeSuiPrivateKey(privateKey);
-    if (schema === "ED25519") return Ed25519Keypair.fromSecretKey(secretKey);
-
-    throw new Error(`Unsupported schema: ${schema}`);
+  placeLimitOrderExample = (tx: Transaction) => {
+    tx.add(
+      this.deepBook.placeLimitOrder({
+        poolKey: "SUI_DBUSDC",
+        balanceManagerKey: "MANAGER_1",
+        clientOrderId: "123456789",
+        price: 1,
+        quantity: 10,
+        isBid: true,
+        // orderType default: no restriction
+        // selfMatchingOption default: allow self matching
+        // payWithDeep default: true
+      }),
+    );
   };
-
-  signAndExecute = async (tx: Transaction) => {
-    // remove arguments
-    return this.suiClient.signAndExecuteTransaction({
-      transaction: tx,
-      signer: this.keypair,
-      options: {
-        showEffects: true,
-        showObjectChanges: true,
-      },
-    });
-  };
-
-  getActiveAddress() {
-    return this.keypair.getPublicKey().toSuiAddress();
-  }
 }
