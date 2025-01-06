@@ -329,6 +329,8 @@ export default function Trade() {
     quoteAssetBalance,
   );
 
+  console.log(positionType, orderType);
+
   return (
     <div className="flex h-full w-full min-w-fit shrink-0 flex-col">
       <div className="border-b p-3">
@@ -343,7 +345,7 @@ export default function Trade() {
         </div>
       </div>
 
-      <Tabs defaultValue="buy" className="h-full">
+      <Tabs defaultValue={positionType} className="h-full">
         <TabsList className="h-12 w-full rounded-none p-0">
           <TabsTrigger
             className="h-full w-1/2 rounded-none bg-gray-100 text-gray-500 shadow-none data-[state=active]:bg-gray-200 data-[state=active]:text-[#26a69a] data-[state=active]:shadow-none"
@@ -361,7 +363,7 @@ export default function Trade() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="buy" className="m-0">
-          <Tabs defaultValue="limit" className="w-full py-3">
+          <Tabs defaultValue={orderType} className="w-full py-3">
             <TabsList className="w-full justify-start gap-3 bg-transparent p-0 pl-3">
               <TabsTrigger
                 className="w-1/4 text-xs shadow-none data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
@@ -401,7 +403,7 @@ export default function Trade() {
           </Tabs>
         </TabsContent>
         <TabsContent value="sell" className="m-0">
-          <Tabs defaultValue="limit" className="w-full py-3">
+          <Tabs defaultValue={orderType} className="w-full py-3">
             <TabsList className="w-full justify-start gap-3 bg-transparent p-0 pl-3">
               <TabsTrigger
                 className="w-1/4 text-xs shadow-none data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
