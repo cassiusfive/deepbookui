@@ -49,7 +49,7 @@ function OrderForm({
       limitPrice: z.string().refine(
         (val) => {
           if (!val) return true;
-          return parseInt(val) > 0;
+          return parseFloat(val) > 0;
         },
         {
           message: "Invalid limit price",
@@ -58,7 +58,7 @@ function OrderForm({
       amount: z.string().refine(
         (val) => {
           if (!val) return true;
-          return parseInt(val) > 0;
+          return parseFloat(val) > 0;
         },
         {
           message: "Invalid amount",
@@ -68,7 +68,7 @@ function OrderForm({
     .superRefine((data, ctx) => {
       if (
         positionType == "buy" &&
-        parseInt(data.amount) * (parseInt(data.limitPrice) || 4.6) >
+        parseFloat(data.amount) * (parseFloat(data.limitPrice) || 4.6) >
           quoteAssetBalance
       ) {
         ctx.addIssue({
@@ -78,7 +78,10 @@ function OrderForm({
         });
       }
 
-      if (positionType == "sell" && parseInt(data.amount) > baseAssetBalance) {
+      if (
+        positionType == "sell" &&
+        parseFloat(data.amount) > baseAssetBalance
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `Insufficient ${baseAsset} balance`,
@@ -246,7 +249,10 @@ function OrderForm({
           </div>
           <div className="flex justify-between">
             <div>TOTAL</div>
-            <div>--</div>
+            <div>
+              {parseFloat(form.watch("limitPrice")) *
+                parseFloat(form.watch("amount")) || "--"}
+            </div>
           </div>
         </div>
         <Button
@@ -309,10 +315,10 @@ export default function Trade() {
     });
 
     baseAssetBalance = baseAsset
-      ? parseInt(baseAsset.totalBalance) / 1000000000
+      ? parseFloat(baseAsset.totalBalance) / 1000000000
       : 0;
     quoteAssetBalance = quoteAsset
-      ? parseInt(quoteAsset.totalBalance) / 1000000000
+      ? parseFloat(quoteAsset.totalBalance) / 1000000000
       : 0;
   }
 

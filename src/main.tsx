@@ -64,6 +64,7 @@ declare module "@tanstack/react-router" {
 const queryClient = new QueryClient();
 const networks = {
   devnet: { url: getFullnodeUrl("devnet") },
+  testnet: { url: getFullnodeUrl("testnet") },
   mainnet: { url: getFullnodeUrl("mainnet") },
 };
 
@@ -87,5 +88,9 @@ createRoot(document.getElementById("root")!).render(
 
 function WalletProviderWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
-  return <WalletProvider theme={themes[theme]}>{children}</WalletProvider>;
+  return (
+    <WalletProvider autoConnect theme={themes[theme]}>
+      {children}
+    </WalletProvider>
+  );
 }
