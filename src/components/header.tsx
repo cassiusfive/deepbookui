@@ -5,6 +5,7 @@ import {
 } from "@mysten/dapp-kit";
 import { Settings, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/contexts/theme";
+import { usePoolsContext } from "@/contexts/pools";
 import { useContract } from "@/contexts/contract";
 import { usePrice } from "@/hooks/usePrice";
 import { useSummary } from "@/hooks/useSummary";
@@ -12,9 +13,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
+import suiImg from "@/assets/sui.png";
+import usdcImg from "@/assets/usdc.png";
 import notFound from "@/assets/not-found.png";
 import PairTable from "./pair-table";
 
@@ -24,41 +25,55 @@ export default function Navbar() {
   const contractContext = useContract();
   if (!contractContext) return;
 
+  const pools = usePoolsContext()
   const { data: summary, isLoading: isSummaryLoading } = useSummary();
-  const { data: baseAssetMetadata, isLoading: isBaseAssetMetadataLoading } =
-    useSuiClientQuery("getCoinMetadata", {
-      coinType: contractContext.baseAsset.baseAssetId,
-    });
-  const { data: quoteAssetMetadata, isLoading: isQuoteAssetMetadataLoading } =
-    useSuiClientQuery("getCoinMetadata", {
-      coinType: contractContext.quoteAsset.quoteAssetId,
-    });
-  const { data: price, isLoading: isPriceLoading } = usePrice(
-    contractContext.poolKey,
+  const { data: price, isLoading: isPriceLoading } = usePrice(contractContext.poolKey);
+
+  const pair = summary?.find(pair =>
+    pair.trading_pairs ==
+    `${contractContext.baseAsset.baseAssetSymbol}_${contractContext.quoteAsset.quoteAssetSymbol}`,
   );
+
+  const pool = pools?.find(pool => 
+    pool.base_asset_symbol == pair?.base_currency &&
+    pool.quote_asset_symbol == pair?.quote_currency
+  )
+
+  const baseAssetMetadata = useSuiClientQuery(
+    "getCoinMetadata",
+    { coinType: pool?.base_asset_id ?? "" }
+  )
+
+  const quoteAssetMetadata = useSuiClientQuery(
+    "getCoinMetadata",
+    { coinType: pool?.quote_asset_id ?? "" }
+  )
+
+  let baseAssetImg = baseAssetMetadata.data?.iconUrl
+  if (!baseAssetImg) {
+    if (pair?.base_currency.includes("SUI")) baseAssetImg = suiImg
+    else if (pair?.base_currency.includes("USDC")) baseAssetImg = usdcImg
+    else baseAssetImg = notFound
+  }
+  let quoteAssetImg = quoteAssetMetadata.data?.iconUrl
+  if (!quoteAssetImg) {
+    if (pair?.quote_currency.includes("SUI")) quoteAssetImg = suiImg
+    else if (pair?.quote_currency.includes("USDC")) quoteAssetImg = usdcImg
+    else quoteAssetImg = notFound
+  }
 
   const account = useCurrentAccount();
   if (account) console.log(`connected to ${account.address}`);
 
-  if (
-    isSummaryLoading ||
-    isPriceLoading ||
-    isBaseAssetMetadataLoading ||
-    isQuoteAssetMetadataLoading
-  )
+  if (isSummaryLoading || isPriceLoading) {
     return <div className="border-b"></div>;
-  if (!summary || !price || !baseAssetMetadata || !quoteAssetMetadata)
+  }
+
+  if (!summary || !price || !pools) {
     return <div className="border-b">failed to load pairs</div>;
-
-  const pool = summary.find(
-    (pool) =>
-      pool.trading_pairs ==
-      `${contractContext.baseAsset.baseAssetSymbol}_${contractContext.quoteAsset.quoteAssetSymbol}`,
-  );
-
+  }
+  if (!pair) return <div className="border-b">failed to find pair</div>;
   if (!pool) return <div className="border-b">failed to find pool</div>;
-
-  console.log(baseAssetMetadata, quoteAssetMetadata);
 
   return (
     <div className="flex w-full items-center justify-between border-b p-4">
@@ -68,17 +83,17 @@ export default function Navbar() {
             <div className="flex items-center justify-center gap-2 rounded-full bg-gray-200 px-3 py-2">
               <div className="flex">
                 <img
-                  src={baseAssetMetadata.iconUrl ?? notFound}
+                  src={baseAssetImg}
                   alt={`${contractContext.baseAsset.baseAssetSymbol} symbol`}
                   className="z-10 w-6"
                 />
                 <img
-                  src={quoteAssetMetadata.iconUrl ?? notFound}
+                  src={quoteAssetImg}
                   alt={`${contractContext.quoteAsset.quoteAssetSymbol} symbol`}
                   className="ml-[-8px] w-6"
                 />
               </div>
-              <div className="whitespace-nowrap">{`${baseAssetMetadata.symbol}-${quoteAssetMetadata.symbol}`}</div>
+              <div className="whitespace-nowrap">{`${baseAssetMetadata.data?.symbol}-${quoteAssetMetadata.data?.symbol}`}</div>
             </div>
           </SheetTrigger>
           <SheetContent
@@ -95,23 +110,23 @@ export default function Navbar() {
             <div className="">
               ${price}{" "}
               <span className="text-red-500">
-                {pool.price_change_percent_24h.toFixed(2)}%
+                {pair.price_change_percent_24h.toFixed(2)}%
               </span>
             </div>
           </div>
           <div className="flex flex-col">
             <div className="text-sm text-gray-500">24H VOLUME</div>
             <div className="">
-              ${(pool.base_volume + pool.quote_volume).toFixed(0)}
+              ${(pair.base_volume + pair.quote_volume).toFixed(0)}
             </div>
           </div>
           <div className="flex flex-col">
             <div className="text-sm text-gray-500">24H HIGH</div>
-            <div className="">${pool.highest_price_24h.toFixed(4)}</div>
+            <div className="">${pair.highest_price_24h.toFixed(4)}</div>
           </div>
           <div className="flex flex-col">
             <div className="text-sm text-gray-500">24H LOW</div>
-            <div className="">${pool.lowest_price_24h.toFixed(4)}</div>
+            <div className="">${pair.lowest_price_24h.toFixed(4)}</div>
           </div>
         </div>
       </div>
