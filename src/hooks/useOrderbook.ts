@@ -40,11 +40,10 @@ async function fetchOrderbookInfo(
   };
 }
 
-// should pass in poolId as context
-export function useOrderbook(poolId?: string) {
+export function useOrderbook(poolId: string) {
   return useQuery({
     queryKey: ["orderbook", poolId],
-    queryFn: () => fetchOrderbookInfo(poolId!),
+    queryFn: () => fetchOrderbookInfo(poolId),
     refetchInterval: 500,
     refetchIntervalInBackground: true,
     enabled: !!poolId,
