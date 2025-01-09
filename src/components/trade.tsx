@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContract } from "@/contexts/contract";
+import { useCurrentPool } from "@/contexts/pool";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -273,8 +274,7 @@ function OrderForm({
 }
 
 export default function Trade() {
-  const contractContext = useContract();
-  if (!contractContext) return;
+  const pool = useCurrentPool();
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
@@ -299,16 +299,14 @@ export default function Trade() {
 
     // normalize pool id
     const baseAsset = data.find((coin) => {
-      const [address, ...rest] =
-        contractContext.baseAsset.baseAssetId.split("::");
+      const [address, ...rest] = pool.base_asset_id.split("::");
       const normalizedAddress = BigInt(address).toString(16);
       console.log(`0x${normalizedAddress}::${rest.join("::")}`);
       return `0x${normalizedAddress}::${rest.join("::")}` == coin.coinType;
     });
 
     const quoteAsset = data.find((coin) => {
-      const [address, ...rest] =
-        contractContext.quoteAsset.quoteAssetId.split("::");
+      const [address, ...rest] = pool.quote_asset_id.split("::");
       const normalizedAddress = BigInt(address).toString(16);
       console.log(`0x${normalizedAddress}::${rest.join("::")}`);
       return `0x${normalizedAddress}::${rest.join("::")}` == coin.coinType;
@@ -336,11 +334,11 @@ export default function Trade() {
       <div className="border-b p-3">
         <h1 className="pb-2">Available to trade</h1>
         <div className="flex justify-between text-sm">
-          <div>{contractContext.baseAsset.baseAssetSymbol}</div>
+          <div>{pool.base_asset_symbol}</div>
           <div className="text-right">{baseAssetBalance.toFixed(4)}</div>
         </div>
         <div className="flex justify-between text-sm">
-          <div>{contractContext.quoteAsset.quoteAssetSymbol}</div>
+          <div>{pool.quote_asset_symbol}</div>
           <div className="text-right">${quoteAssetBalance.toFixed(4)}</div>
         </div>
       </div>
@@ -382,8 +380,8 @@ export default function Trade() {
             </TabsList>
             <TabsContent value="limit" className="m-0">
               <OrderForm
-                baseAsset={contractContext.baseAsset.baseAssetSymbol}
-                quoteAsset={contractContext.quoteAsset.quoteAssetSymbol}
+                baseAsset={pool.base_asset_symbol}
+                quoteAsset={pool.quote_asset_symbol}
                 baseAssetBalance={baseAssetBalance}
                 quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
@@ -392,8 +390,8 @@ export default function Trade() {
             </TabsContent>
             <TabsContent value="market" className="m-0">
               <OrderForm
-                baseAsset={contractContext.baseAsset.baseAssetSymbol}
-                quoteAsset={contractContext.quoteAsset.quoteAssetSymbol}
+                baseAsset={pool.base_asset_symbol}
+                quoteAsset={pool.quote_asset_symbol}
                 baseAssetBalance={baseAssetBalance}
                 quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
@@ -422,8 +420,8 @@ export default function Trade() {
             </TabsList>
             <TabsContent value="limit" className="m-0">
               <OrderForm
-                baseAsset={contractContext.baseAsset.baseAssetSymbol}
-                quoteAsset={contractContext.quoteAsset.quoteAssetSymbol}
+                baseAsset={pool.base_asset_name}
+                quoteAsset={pool.quote_asset_symbol}
                 baseAssetBalance={baseAssetBalance}
                 quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
@@ -432,8 +430,8 @@ export default function Trade() {
             </TabsContent>
             <TabsContent value="market" className="m-0">
               <OrderForm
-                baseAsset={contractContext.baseAsset.baseAssetSymbol}
-                quoteAsset={contractContext.quoteAsset.quoteAssetSymbol}
+                baseAsset={pool.base_asset_symbol}
+                quoteAsset={pool.quote_asset_symbol}
                 baseAssetBalance={baseAssetBalance}
                 quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}

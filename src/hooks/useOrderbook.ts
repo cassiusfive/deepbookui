@@ -1,3 +1,4 @@
+import { useCurrentPool } from "@/contexts/pool";
 import deepbookApiClient from "@/lib/deepbook/apiClient";
 import { useQuery } from "@tanstack/react-query";
 
@@ -40,12 +41,13 @@ async function fetchOrderbookInfo(
   };
 }
 
-export function useOrderbook(poolId: string) {
+export function useOrderbook() {
+  const pool = useCurrentPool();
+
   return useQuery({
-    queryKey: ["orderbook", poolId],
-    queryFn: () => fetchOrderbookInfo(poolId),
+    queryKey: ["orderbook", pool.pool_name],
+    queryFn: () => fetchOrderbookInfo(pool.pool_name),
     refetchInterval: 500,
     refetchIntervalInBackground: true,
-    enabled: !!poolId,
   });
 }

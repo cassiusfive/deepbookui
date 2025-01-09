@@ -28,5 +28,6 @@ export function usePools() {
   return useQuery({
     queryKey: ["pools"],
     queryFn: () => fetchPools(),
+    staleTime: 24 * 60 * 60 * 1000,
   });
 }

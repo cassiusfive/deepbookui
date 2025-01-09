@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useContract } from "@/contexts/contract";
 import { useState } from "react";
+import { useCurrentPool } from "@/contexts/pool";
 
 type OrderbookEntriesProps = {
   entries: OrderbookEntry[];
@@ -15,6 +16,7 @@ type OrderbookEntriesProps = {
 };
 
 function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
+  const pool = useCurrentPool();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const textColor = type === "ask" ? "text-[#ef5350]" : "text-[#26a69a]";
@@ -80,11 +82,11 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
             <p>{aggregateData[index].averagePrice.toFixed(5)}</p>
           </div>
           <div className="flex w-full justify-between gap-2">
-            <p>Sum DEEP:</p>
+            <p>{`Sum ${pool.base_asset_symbol}:`}</p>
             <p>{aggregateData[index].amount}</p>
           </div>
           <div className="flex w-full justify-between gap-2">
-            <p>Sum SUI:</p>
+            <p>{`Sum ${pool.quote_asset_symbol}:`}</p>
             <p>{aggregateData[index].value.toFixed(5)}</p>
           </div>
         </TooltipContent>
@@ -94,18 +96,18 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
 }
 
 export default function OrderBook() {
-  const contractContext = useContract();
-  const { data, isLoading } = useOrderbook(contractContext?.poolKey);
+  const pool = useCurrentPool();
+  const { data, isLoading } = useOrderbook();
 
-  if (isLoading || !contractContext) return <div></div>;
+  if (isLoading) return <div></div>;
   if (!data) return <div>Error</div>;
 
   return (
     <table className="h-full w-full text-xs">
       <thead className="sticky top-0 z-10 h-6 bg-background text-gray-500 shadow-[0_0_0_1px_rgb(229,231,235)]">
         <tr>
-          <th className="w-full text-nowrap pr-6 text-right">{`Amount (${contractContext.baseAsset.baseAssetSymbol})`}</th>
-          <th className="w-auto text-nowrap pr-3">{`Price (${contractContext.quoteAsset.quoteAssetSymbol})`}</th>
+          <th className="w-full text-nowrap pr-6 text-right">{`Amount (${pool.base_asset_symbol})`}</th>
+          <th className="w-auto text-nowrap pr-3">{`Price (${pool.quote_asset_symbol})`}</th>
         </tr>
       </thead>
       <tbody>

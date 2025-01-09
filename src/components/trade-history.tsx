@@ -1,4 +1,4 @@
-import { useContract } from "@/contexts/contract";
+import { useCurrentPool } from "@/contexts/pool";
 
 type Trade = {
   amount: number;
@@ -27,15 +27,14 @@ function formatTime(date: Date): string {
 }
 
 export default function TradeHistory() {
-  const contractContext = useContract();
-  if (!contractContext) return;
+  const pool = useCurrentPool();
 
   return (
     <table className="w-full text-xs">
       <thead className="sticky top-0 h-6 bg-background text-right text-gray-500 shadow-[0_0_0_1px_rgb(229,231,235)]">
         <tr>
-          <th className="w-full text-nowrap pl-2 pr-4">{`AMOUNT (${contractContext.baseAsset.baseAssetSymbol})`}</th>
-          <th className="w-auto text-nowrap pr-6">{`AMOUNT (${contractContext.quoteAsset.quoteAssetSymbol})`}</th>
+          <th className="w-full text-nowrap pl-2 pr-4">{`AMOUNT (${pool.base_asset_symbol})`}</th>
+          <th className="w-auto text-nowrap pr-6">{`AMOUNT (${pool.quote_asset_symbol})`}</th>
           <th className="w-auto text-nowrap pr-3">TIME</th>
         </tr>
       </thead>

@@ -18,48 +18,36 @@ import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
 import notFound from "@/assets/not-found.png";
 import PairTable from "./pair-table";
+import { useCurrentPool } from "@/contexts/pool";
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
 
-  const contractContext = useContract();
-  if (!contractContext) return;
-
-  const pools = usePoolsContext()
+  const pool = useCurrentPool();
   const { data: summary, isLoading: isSummaryLoading } = useSummary();
-  const { data: price, isLoading: isPriceLoading } = usePrice(contractContext.poolKey);
+  const { data: price, isLoading: isPriceLoading } = usePrice(pool.pool_name);
 
-  const pair = summary?.find(pair =>
-    pair.trading_pairs ==
-    `${contractContext.baseAsset.baseAssetSymbol}_${contractContext.quoteAsset.quoteAssetSymbol}`,
-  );
+  const pair = summary?.find((pair) => pair.trading_pairs == pool.pool_name);
 
-  const pool = pools?.find(pool => 
-    pool.base_asset_symbol == pair?.base_currency &&
-    pool.quote_asset_symbol == pair?.quote_currency
-  )
+  const baseAssetMetadata = useSuiClientQuery("getCoinMetadata", {
+    coinType: pool?.base_asset_id ?? "",
+  });
 
-  const baseAssetMetadata = useSuiClientQuery(
-    "getCoinMetadata",
-    { coinType: pool?.base_asset_id ?? "" }
-  )
+  const quoteAssetMetadata = useSuiClientQuery("getCoinMetadata", {
+    coinType: pool?.quote_asset_id ?? "",
+  });
 
-  const quoteAssetMetadata = useSuiClientQuery(
-    "getCoinMetadata",
-    { coinType: pool?.quote_asset_id ?? "" }
-  )
-
-  let baseAssetImg = baseAssetMetadata.data?.iconUrl
+  let baseAssetImg = baseAssetMetadata.data?.iconUrl;
   if (!baseAssetImg) {
-    if (pair?.base_currency.includes("SUI")) baseAssetImg = suiImg
-    else if (pair?.base_currency.includes("USDC")) baseAssetImg = usdcImg
-    else baseAssetImg = notFound
+    if (pair?.base_currency.includes("SUI")) baseAssetImg = suiImg;
+    else if (pair?.base_currency.includes("USDC")) baseAssetImg = usdcImg;
+    else baseAssetImg = notFound;
   }
-  let quoteAssetImg = quoteAssetMetadata.data?.iconUrl
+  let quoteAssetImg = quoteAssetMetadata.data?.iconUrl;
   if (!quoteAssetImg) {
-    if (pair?.quote_currency.includes("SUI")) quoteAssetImg = suiImg
-    else if (pair?.quote_currency.includes("USDC")) quoteAssetImg = usdcImg
-    else quoteAssetImg = notFound
+    if (pair?.quote_currency.includes("SUI")) quoteAssetImg = suiImg;
+    else if (pair?.quote_currency.includes("USDC")) quoteAssetImg = usdcImg;
+    else quoteAssetImg = notFound;
   }
 
   const account = useCurrentAccount();
@@ -69,7 +57,7 @@ export default function Navbar() {
     return <div className="border-b"></div>;
   }
 
-  if (!summary || !price || !pools) {
+  if (!summary || !price) {
     return <div className="border-b">failed to load pairs</div>;
   }
   if (!pair) return <div className="border-b">failed to find pair</div>;
@@ -84,12 +72,12 @@ export default function Navbar() {
               <div className="flex">
                 <img
                   src={baseAssetImg}
-                  alt={`${contractContext.baseAsset.baseAssetSymbol} symbol`}
+                  alt={`${pool.base_asset_symbol} symbol`}
                   className="z-10 w-6"
                 />
                 <img
                   src={quoteAssetImg}
-                  alt={`${contractContext.quoteAsset.quoteAssetSymbol} symbol`}
+                  alt={`${pool.quote_asset_symbol} symbol`}
                   className="ml-[-8px] w-6"
                 />
               </div>
