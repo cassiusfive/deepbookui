@@ -1,5 +1,5 @@
-import { useContract } from "@/contexts/contract";
 import { DeepBookContext } from "@/contexts/deepbook";
+import { useCurrentPool } from "@/contexts/pool";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
@@ -14,14 +14,11 @@ const DEEPBOOK_PACKAGE_ID =
 export function useDeepBook() {
   const context = useContext(DeepBookContext);
   const account = useCurrentAccount();
-  const currentPool = useContract();
+  const pool = useCurrentPool();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
   if (!context) {
     throw new Error("useDeepBook must be used within a DeepBookProvider");
-  }
-  if (!currentPool) {
-    throw new Error("useDeepBook must be used within a ContractProvider");
   }
 
   const getBalanceManager = (tx: Transaction) => {
@@ -52,19 +49,20 @@ export function useDeepBook() {
     const tx = new Transaction();
 
     const manager = getBalanceManager(tx);
-    const coin = currentPool.baseAsset;
 
     tx.setSenderIfNotSet(account.address);
-    const depositInput = Math.round(amountToDeposit * coin.scalar);
+    const depositInput = Math.round(
+      amountToDeposit * pool.quote_asset_decimals,
+    );
     const deposit = coinWithBalance({
-      type: currentPool.baseAsset.baseAssetId,
+      type: pool.quote_asset_id,
       balance: depositInput,
     });
 
     tx.moveCall({
       target: `${DEEPBOOK_PACKAGE_ID}::balance_manager::deposit`,
       arguments: [manager, deposit],
-      typeArguments: [coin.id],
+      typeArguments: [pool.quote_asset_id],
     });
 
     signAndExecuteTransaction({ transaction: tx });

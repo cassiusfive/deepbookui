@@ -5,8 +5,6 @@ import {
 } from "@mysten/dapp-kit";
 import { Settings, Sun, Moon } from "lucide-react";
 import { useTheme } from "@/contexts/theme";
-import { usePoolsContext } from "@/contexts/pools";
-import { useContract } from "@/contexts/contract";
 import { usePrice } from "@/hooks/usePrice";
 import { useSummary } from "@/hooks/useSummary";
 import { Switch } from "@/components/ui/switch";

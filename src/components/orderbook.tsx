@@ -6,7 +6,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useContract } from "@/contexts/contract";
 import { useState } from "react";
 import { useCurrentPool } from "@/contexts/pool";
 

@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useContract } from "@/contexts/contract";
 import { useCurrentPool } from "@/contexts/pool";
 
 type PositionType = "buy" | "sell";
