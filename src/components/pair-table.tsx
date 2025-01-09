@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useSuiClientQueries } from "@mysten/dapp-kit";
 import { useSummary } from "@/hooks/useSummary";
 import { usePoolsContext } from "@/contexts/pools";
@@ -57,7 +58,12 @@ export default function PairTable() {
           <p className="text-center">No pair found</p>
         )}
         {filteredData.map(pair => {
-          
+          const pool = pools.find(pool => 
+            pool.base_asset_symbol == pair.base_currency && 
+            pool.quote_asset_symbol == pair.quote_currency
+          )
+          if (!pool) return <div>pool not found</div>
+
           let baseAssetImg = metadataResults.find(res => res.data?.symbol === pair.base_currency)?.data?.iconUrl
           if (!baseAssetImg) {
             if (pair.base_currency.includes("SUI")) baseAssetImg = suiImg
@@ -72,9 +78,10 @@ export default function PairTable() {
           }
 
           return (
-            <a
+            <Link
               className="flex w-full items-center p-2 hover:bg-gray-100"
-              href={`/trade/${pair.trading_pairs}`}
+              to="/trade/$contractAddress"
+              params={{ contractAddress: pool.pool_id }}
             >
               <div className="mr-6 flex">
                 <img
@@ -106,7 +113,7 @@ export default function PairTable() {
                   {Math.abs(pair.price_change_percent_24h).toFixed(2)}%
                 </p>
               </div>
-            </a>
+            </Link>
           )
         })}
       </div>
