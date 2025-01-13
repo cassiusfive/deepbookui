@@ -6,7 +6,7 @@ import {
   useSuiClientContext,
 } from "@mysten/dapp-kit";
 
-const DeepBookContext = createContext<DeepBookMarketMaker | null>(null);
+export const DeepBookContext = createContext<DeepBookMarketMaker | null>(null);
 
 export function DeepBookProvider({ children }: { children: ReactNode }) {
   const account = useCurrentAccount();

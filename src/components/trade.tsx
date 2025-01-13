@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
-import { useDeepBook } from "@/contexts/deepbook";
+import { useDeepBook } from "@/hooks/useDeepbook";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentPool } from "@/contexts/pool";
+import { useQuantityOut } from "@/hooks/useQuantityOut";
+import { usePrice } from "@/hooks/usePrice";
+import { useOrderbook } from "@/hooks/useOrderbook";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -41,24 +44,30 @@ function OrderForm({
   positionType,
   orderExecutionType,
 }: FormProps) {
-  const deepbook = useDeepBook();
-  if (!deepbook) return;
+  const { context: deepbook, placeLimitOrder } = useDeepBook();
+
+  const { data: orderbook } = useOrderbook();
+  const pool = useCurrentPool();
+  const { data: priceData } = usePrice(pool.pool_name);
+
+  const bestBid = useMemo(() => orderbook?.bids[0].price, [orderbook]);
+  const midPrice = useMemo(() => priceData, [priceData]);
 
   const formSchema = z
     .object({
-      limitPrice: z.string().refine(
+      limitPrice: z.coerce.number().refine(
         (val) => {
           if (!val) return true;
-          return parseFloat(val) > 0;
+          return val > 0;
         },
         {
           message: "Invalid limit price",
         },
       ),
-      amount: z.string().refine(
+      amount: z.coerce.number().refine(
         (val) => {
           if (!val) return true;
-          return parseFloat(val) > 0;
+          return val > 0;
         },
         {
           message: "Invalid amount",
@@ -68,8 +77,7 @@ function OrderForm({
     .superRefine((data, ctx) => {
       if (
         positionType == "buy" &&
-        parseFloat(data.amount) * (parseFloat(data.limitPrice) || 4.6) >
-          quoteAssetBalance
+        data.amount * (data.limitPrice || 4.6) > quoteAssetBalance
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -78,10 +86,7 @@ function OrderForm({
         });
       }
 
-      if (
-        positionType == "sell" &&
-        parseFloat(data.amount) > baseAssetBalance
-      ) {
+      if (positionType == "sell" && data.amount > baseAssetBalance) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `Insufficient ${baseAsset} balance`,
@@ -93,46 +98,62 @@ function OrderForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      limitPrice: "",
-      amount: "",
+      limitPrice: undefined,
+      amount: undefined,
     },
     mode: "onChange",
   });
 
-  useEffect(() => {
-    (async function () {
-      const price = await deepbook.midPrice(`${baseAsset}_${quoteAsset}`);
-      form.setValue("limitPrice", price.toFixed(4));
-    })();
-  }, []);
+  const limitPrice = form.watch("limitPrice");
+  const amount = form.watch("amount");
+  const total = limitPrice * amount;
+  const { data: quantityOut } = useQuantityOut(0, total);
+  console.log(quantityOut);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("SUBMIT", values);
+    console.log(pool.quote_asset_decimals);
+    placeLimitOrder(amount, limitPrice, "bid");
   }
 
-  async function updateLimitPrice(type: "bid" | "mid") {
-    if (type == "mid") {
-      const price = await deepbook!.midPrice(`${baseAsset}_${quoteAsset}`);
-      form.setValue("limitPrice", price.toFixed(4));
-    } else {
-      // fetch highest bid
-      form.setValue("limitPrice", "4.0000");
-    }
-  }
+  const updateLimitPrice = useCallback(
+    (type: "bid" | "mid") => {
+      if (type == "mid" && midPrice) {
+        form.setValue("limitPrice", midPrice);
+      } else if (bestBid) {
+        form.setValue("limitPrice", bestBid);
+      }
+    },
+    [midPrice, bestBid, form],
+  );
 
-  function updateAmount(percent: 0.25 | 0.5 | 1) {
-    if (positionType == "buy") {
-      form.setValue(
-        "amount",
-        (percent * quoteAssetBalance).toFixed(4).toString(),
-      );
-    } else {
-      form.setValue(
-        "amount",
-        (percent * baseAssetBalance).toFixed(4).toString(),
-      );
+  const limitPriceFilled = useRef(false);
+  useEffect(() => {
+    if (!limitPriceFilled.current && midPrice) {
+      updateLimitPrice("mid");
+      limitPriceFilled.current = true;
     }
-  }
+  }, [updateLimitPrice, midPrice]);
+
+  const updateAmount = useCallback(
+    (percent: 0.25 | 0.5 | 1) => {
+      console.log(limitPrice);
+      if (positionType == "buy") {
+        form.setValue(
+          "amount",
+          ((percent * quoteAssetBalance) / limitPrice) * 0.99,
+          {
+            shouldValidate: true,
+          },
+        );
+      } else {
+        form.setValue("amount", percent * baseAssetBalance, {
+          shouldValidate: true,
+        });
+      }
+    },
+    [limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
+  );
 
   return (
     <div>
@@ -159,6 +180,7 @@ function OrderForm({
                       className="!mt-0 h-8 rounded-sm pr-10 text-right shadow-none [appearance:textfield] hover:border-gray-300 focus:!outline-2 focus:!outline-offset-[-1px] focus:!outline-gray-400 focus:!ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       type="number"
                       placeholder="0.0000"
+                      step="any"
                       {...field}
                     />
                   </FormControl>
@@ -201,6 +223,7 @@ function OrderForm({
                     className="!mt-0 h-8 rounded-sm pr-10 text-right shadow-none [appearance:textfield] hover:border-gray-300 focus:!outline-2 focus:!outline-offset-[-1px] focus:!outline-gray-400 focus:!ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     type="number"
                     placeholder="0.0000"
+                    step="any"
                     {...field}
                   />
                 </FormControl>
@@ -239,19 +262,14 @@ function OrderForm({
       <div className="flex h-full flex-col justify-between gap-3 border-t p-3 text-xs">
         <div className="flex flex-col gap-1">
           <div className="flex justify-between text-gray-500">
-            <div>SUBTOTAL</div>
-            <div>--</div>
+            <div>TOTAL</div>
+            <div>{total ? `${total} ${quoteAsset}` : "--"}</div>
           </div>
 
           <div className="flex justify-between text-gray-500">
             <div>FEE</div>
-            <div>--</div>
-          </div>
-          <div className="flex justify-between">
-            <div>TOTAL</div>
             <div>
-              {parseFloat(form.watch("limitPrice")) *
-                parseFloat(form.watch("amount")) || "--"}
+              {quantityOut ? `${quantityOut?.deepRequired} DEEP` : "--"}
             </div>
           </div>
         </div>
@@ -278,7 +296,7 @@ export default function Trade() {
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
 
-  var baseAssetBalance, quoteAssetBalance;
+  let baseAssetBalance, quoteAssetBalance;
 
   const account = useCurrentAccount();
 
