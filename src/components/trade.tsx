@@ -106,6 +106,7 @@ function OrderForm({
 
   const limitPrice = form.watch("limitPrice");
   const amount = form.watch("amount");
+  const integerAmount = amount * 10 ** pool.base_asset_decimals;
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
   console.log(quantityOut);
@@ -139,20 +140,20 @@ function OrderForm({
     (percent: 0.25 | 0.5 | 1) => {
       console.log(limitPrice);
       if (positionType == "buy") {
-        form.setValue(
-          "amount",
-          ((percent * quoteAssetBalance) / limitPrice) * 0.99,
-          {
-            shouldValidate: true,
-          },
-        );
+        const newAmount = ((percent * quoteAssetBalance) / limitPrice) * 0.99;
+        const integerAmount = newAmount * 10 ** pool.base_asset_decimals;
+        const rounded =
+          Math.floor(integerAmount / pool.lot_size) * pool.lot_size;
+        form.setValue("amount", rounded / 10 ** pool.base_asset_decimals, {
+          shouldValidate: true,
+        });
       } else {
         form.setValue("amount", percent * baseAssetBalance, {
           shouldValidate: true,
         });
       }
     },
-    [limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
+    [pool, limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
   );
 
   return (
