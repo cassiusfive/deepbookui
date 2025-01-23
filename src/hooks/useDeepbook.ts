@@ -8,7 +8,7 @@ import { coinWithBalance, Transaction } from "@mysten/sui/transactions";
 import { useContext } from "react";
 import { SUI_CLOCK_OBJECT_ID } from "@mysten/sui/utils";
 
-const BALANCE_MANAGER_STORAGE_KEY = "DeepBookUI-BalanceManager";
+export const BALANCE_MANAGER_STORAGE_KEY = "DeepBookUI-BalanceManager";
 const DEEPBOOK_PACKAGE_ID =
   "0x2c8d603bc51326b8c13cef9dd07031a408a48dddb541963357661df5d3204809";
 
@@ -121,7 +121,19 @@ export function useDeepBook() {
       });
     }
 
-    return signAndExecuteTransaction({ transaction: tx });
+    return signAndExecuteTransaction({ transaction: tx }).then((res) => {
+      if (managerCreated) {
+        // @ts-expect-error https://docs.sui.io/standards/deepbookv3-sdk
+        const managerAddress: string = res.objectChanges?.find((change) => {
+          return (
+            change.type === "created" &&
+            change.objectType.includes("BalanceManager")
+          );
+        })?.["objectId"];
+
+        localStorage.setItem(BALANCE_MANAGER_STORAGE_KEY, managerAddress);
+      }
+    });
   };
 
   return { context, placeLimitOrder };
