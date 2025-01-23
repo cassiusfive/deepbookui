@@ -4,14 +4,12 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useCurrentAccount, useSuiClientQuery } from "@mysten/dapp-kit";
 import { useDeepBook } from "@/hooks/useDeepbook";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -23,28 +21,19 @@ import { useCurrentPool } from "@/contexts/pool";
 import { useQuantityOut } from "@/hooks/useQuantityOut";
 import { usePrice } from "@/hooks/usePrice";
 import { useOrderbook } from "@/hooks/useOrderbook";
+import { useBalancesFromCurrentPool } from "@/hooks/useBalances";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
 
 type FormProps = {
-  baseAsset: string;
-  quoteAsset: string;
-  baseAssetBalance: number;
-  quoteAssetBalance: number;
   positionType: PositionType;
   orderExecutionType: OrderExecutionType;
 };
 
-function OrderForm({
-  baseAsset,
-  quoteAsset,
-  baseAssetBalance,
-  quoteAssetBalance,
-  positionType,
-  orderExecutionType,
-}: FormProps) {
-  const { context: deepbook, placeLimitOrder } = useDeepBook();
+function OrderForm({ positionType, orderExecutionType }: FormProps) {
+  const { placeLimitOrder } = useDeepBook();
+  const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
 
   const { data: orderbook } = useOrderbook();
   const pool = useCurrentPool();
@@ -81,7 +70,7 @@ function OrderForm({
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Insufficient ${quoteAsset} balance`,
+          message: `Insufficient ${pool.quote_asset_symbol} balance`,
           path: ["amount"],
         });
       }
@@ -89,7 +78,7 @@ function OrderForm({
       if (positionType == "sell" && data.amount > baseAssetBalance) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Insufficient ${baseAsset} balance`,
+          message: `Insufficient ${pool.base_asset_symbol} balance`,
           path: ["amount"],
         });
       }
@@ -106,10 +95,8 @@ function OrderForm({
 
   const limitPrice = form.watch("limitPrice");
   const amount = form.watch("amount");
-  const integerAmount = amount * 10 ** pool.base_asset_decimals;
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
-  console.log(quantityOut);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("SUBMIT", values);
@@ -120,12 +107,13 @@ function OrderForm({
   const updateLimitPrice = useCallback(
     (type: "bid" | "mid") => {
       if (type == "mid" && midPrice) {
-        form.setValue("limitPrice", midPrice);
+        form.setValue("limitPrice", Number(pool.round.quote(midPrice)));
       } else if (bestBid) {
-        form.setValue("limitPrice", bestBid);
+        console.log(bestBid);
+        form.setValue("limitPrice", Number(pool.round.quote(bestBid)));
       }
     },
-    [midPrice, bestBid, form],
+    [midPrice, bestBid, form, pool.round],
   );
 
   const limitPriceFilled = useRef(false);
@@ -138,7 +126,6 @@ function OrderForm({
 
   const updateAmount = useCallback(
     (percent: 0.25 | 0.5 | 1) => {
-      console.log(limitPrice);
       if (positionType == "buy") {
         const newAmount = ((percent * quoteAssetBalance) / limitPrice) * 0.99;
         const integerAmount = newAmount * 10 ** pool.base_asset_decimals;
@@ -174,7 +161,7 @@ function OrderForm({
                     LIMIT
                   </FormLabel>
                   <FormLabel className="absolute right-2 text-xs">
-                    {quoteAsset}
+                    {pool.quote_asset_symbol}
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -183,6 +170,13 @@ function OrderForm({
                       placeholder="0.0000"
                       step="any"
                       {...field}
+                      onBlur={() => {
+                        field.onBlur();
+                        form.setValue(
+                          field.name,
+                          Number(pool.round.quote(field.value)),
+                        );
+                      }}
                     />
                   </FormControl>
                   <div className="!mt-1 flex gap-1">
@@ -217,7 +211,7 @@ function OrderForm({
                   AMOUNT
                 </FormLabel>
                 <FormLabel className="absolute right-2 text-xs">
-                  {baseAsset}
+                  {pool.base_asset_symbol}
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -226,6 +220,13 @@ function OrderForm({
                     placeholder="0.0000"
                     step="any"
                     {...field}
+                    onBlur={() => {
+                      field.onBlur();
+                      form.setValue(
+                        field.name,
+                        Number(pool.round.base(field.value)),
+                      );
+                    }}
                   />
                 </FormControl>
                 <div className="!mt-1 flex gap-1">
@@ -264,7 +265,11 @@ function OrderForm({
         <div className="flex flex-col gap-1">
           <div className="flex justify-between text-gray-500">
             <div>TOTAL</div>
-            <div>{total ? `${total} ${quoteAsset}` : "--"}</div>
+            <div>
+              {total
+                ? `${pool.round.quote(total)} ${pool.quote_asset_symbol}`
+                : "--"}
+            </div>
           </div>
 
           <div className="flex justify-between text-gray-500">
@@ -293,59 +298,10 @@ function OrderForm({
 
 export default function Trade() {
   const pool = useCurrentPool();
+  const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
-
-  let baseAssetBalance, quoteAssetBalance;
-
-  const account = useCurrentAccount();
-
-  const { data, isLoading, error } = useSuiClientQuery(
-    "getAllBalances",
-    { owner: account?.address ?? "" },
-    { enabled: !!account },
-  );
-
-  if (!account) {
-    baseAssetBalance = 0;
-    quoteAssetBalance = 0;
-  } else {
-    if (isLoading) return <div></div>;
-    if (error) console.log(error);
-    if (!data) return <div>failed to fetch balance</div>;
-
-    // normalize pool id
-    const baseAsset = data.find((coin) => {
-      const [address, ...rest] = pool.base_asset_id.split("::");
-      const normalizedAddress = BigInt(address).toString(16);
-      console.log(`0x${normalizedAddress}::${rest.join("::")}`);
-      return `0x${normalizedAddress}::${rest.join("::")}` == coin.coinType;
-    });
-
-    const quoteAsset = data.find((coin) => {
-      const [address, ...rest] = pool.quote_asset_id.split("::");
-      const normalizedAddress = BigInt(address).toString(16);
-      console.log(`0x${normalizedAddress}::${rest.join("::")}`);
-      return `0x${normalizedAddress}::${rest.join("::")}` == coin.coinType;
-    });
-
-    baseAssetBalance = baseAsset
-      ? parseFloat(baseAsset.totalBalance) / 1000000000
-      : 0;
-    quoteAssetBalance = quoteAsset
-      ? parseFloat(quoteAsset.totalBalance) / 1000000000
-      : 0;
-  }
-
-  console.log(
-    "base asset balance",
-    baseAssetBalance,
-    "quote asset balance",
-    quoteAssetBalance,
-  );
-
-  console.log(positionType, orderType);
 
   return (
     <div className="flex h-full w-full min-w-fit shrink-0 flex-col">
@@ -353,11 +309,13 @@ export default function Trade() {
         <h1 className="pb-2">Available to trade</h1>
         <div className="flex justify-between text-sm">
           <div>{pool.base_asset_symbol}</div>
-          <div className="text-right">{baseAssetBalance.toFixed(4)}</div>
+          <div className="text-right">{pool.round.base(baseAssetBalance)}</div>
         </div>
         <div className="flex justify-between text-sm">
           <div>{pool.quote_asset_symbol}</div>
-          <div className="text-right">${quoteAssetBalance.toFixed(4)}</div>
+          <div className="text-right">
+            ${quoteAssetBalance.toFixed(pool.displayPrecision)}
+          </div>
         </div>
       </div>
 
@@ -398,20 +356,12 @@ export default function Trade() {
             </TabsList>
             <TabsContent value="limit" className="m-0">
               <OrderForm
-                baseAsset={pool.base_asset_symbol}
-                quoteAsset={pool.quote_asset_symbol}
-                baseAssetBalance={baseAssetBalance}
-                quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
                 orderExecutionType={orderType}
               />
             </TabsContent>
             <TabsContent value="market" className="m-0">
               <OrderForm
-                baseAsset={pool.base_asset_symbol}
-                quoteAsset={pool.quote_asset_symbol}
-                baseAssetBalance={baseAssetBalance}
-                quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
                 orderExecutionType={orderType}
               />
@@ -438,20 +388,12 @@ export default function Trade() {
             </TabsList>
             <TabsContent value="limit" className="m-0">
               <OrderForm
-                baseAsset={pool.base_asset_name}
-                quoteAsset={pool.quote_asset_symbol}
-                baseAssetBalance={baseAssetBalance}
-                quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
                 orderExecutionType={orderType}
               />
             </TabsContent>
             <TabsContent value="market" className="m-0">
               <OrderForm
-                baseAsset={pool.base_asset_symbol}
-                quoteAsset={pool.quote_asset_symbol}
-                baseAssetBalance={baseAssetBalance}
-                quoteAssetBalance={quoteAssetBalance}
                 positionType={positionType}
                 orderExecutionType={orderType}
               />
