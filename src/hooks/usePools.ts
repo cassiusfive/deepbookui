@@ -1,5 +1,5 @@
 import deepbookApiClient from "@/lib/deepbook/apiClient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
 export type Pool = {
   pool_id: string;
@@ -17,17 +17,10 @@ export type Pool = {
   tick_size: number;
 };
 
-async function fetchPools(): Promise<Pool[]> {
-  const data = await deepbookApiClient(`/get_pools`);
-
-  console.log(data);
-  return data;
-}
-
-export function usePools() {
+export function usePools(): UseQueryResult<Pool[], Error> {
   return useQuery({
     queryKey: ["pools"],
-    queryFn: () => fetchPools(),
+    queryFn: async () => await deepbookApiClient(`/get_pools`),
     staleTime: 24 * 60 * 60 * 1000,
   });
 }
