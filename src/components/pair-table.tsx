@@ -25,8 +25,6 @@ export default function PairTable() {
     ]),
   });
 
-  metadataResults.forEach((res) => console.log(res.data));
-
   const [inputValue, setInputValue] = useState<string>("");
   const input = inputValue.toLowerCase().trim();
 
@@ -109,7 +107,7 @@ export default function PairTable() {
                     ? `$${pair.last_price.toFixed(2)}`
                     : `${pair.last_price.toFixed(2)} ${pair.quote_currency}`}
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Vol {formatter.format(pair.quote_volume)}{" "}
                   {pair.quote_currency}
                 </p>

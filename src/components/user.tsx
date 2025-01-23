@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { useOpenOrders } from "@/hooks/useOpenOrders";
+import { useCurrentPool } from "@/contexts/pool";
 import {
   Table,
   TableBody,
@@ -7,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BookX } from "lucide-react";
+import { useDeepBook } from "@/hooks/useDeepbook";
 
 type Order = {
   time: Date;
@@ -42,13 +46,21 @@ function formatTime(date: Date): string {
   return `${hours}:${minutes}:${seconds}`;
 }
 
+const MANAGER_KEY = "";
+
 export default function User() {
+  const deepbook = useDeepBook();
+  const pool = useCurrentPool();
+
+  const orders = useOpenOrders(pool.pool_id, MANAGER_KEY);
+  console.log("ORDERS", orders.data)
+
   return (
     <div className="h-full">
       <div className="border-b p-4">Orders</div>
       <div className="no-scrollbar h-[180px] overflow-y-auto">
         <Table>
-          <TableHeader className="sticky top-0 text-nowrap bg-background text-xs shadow-[0_0_0_1px_rgb(229,231,235)] [&_tr]:border-none">
+          <TableHeader className="sticky top-0 text-nowrap bg-background text-xs shadow-[0_0_0_1px_hsl(var(--border))] [&_tr]:border-none">
             <TableRow>
               <TableHead className="w-[100px] pl-4">TIME PLACED</TableHead>
               <TableHead>PAIR</TableHead>
@@ -60,7 +72,7 @@ export default function User() {
               <TableHead className="pr-4 text-right">STATUS</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-gray-500 [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
+          <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
             {ORDERS.length > 0 &&
               ORDERS.map((order) => (
                 <TableRow>
@@ -79,7 +91,7 @@ export default function User() {
           </TableBody>
         </Table>
         {!ORDERS.length && (
-          <div className="flex h-[calc(100%-40px)] flex-col items-center justify-center text-xs text-gray-500">
+          <div className="flex h-[calc(100%-40px)] flex-col items-center justify-center text-xs text-muted-foreground">
             <BookX />
             <div>No orders</div>
           </div>

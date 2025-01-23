@@ -1,7 +1,10 @@
 import { useRef, useEffect } from "react";
 import { createChart } from "lightweight-charts";
+import { useTheme } from "@/contexts/theme";
 
 export default function Chart() {
+  const { theme } = useTheme();
+
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -16,11 +19,24 @@ export default function Chart() {
         borderVisible: false,
       },
       timeScale: {
-        borderColor: "#e5e7eb",
+        borderColor: theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)",
       },
       crosshair: {
         mode: 0,
       },
+      layout: {
+        background: {
+          color: theme === "dark" ? "hsl(0, 0%, 10%)" : "hsl(0, 0%, 100%)"
+        },
+      },
+      grid: {
+        vertLines: { 
+          color: theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" 
+        },
+        horzLines: { 
+          color: theme === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)" 
+        }
+    },
     });
 
     const candlestickSeries = chart.addCandlestickSeries({
@@ -91,7 +107,7 @@ export default function Chart() {
     return () => {
       chart.remove();
     };
-  }, []);
+  }, [theme]);
 
   return (
     <div ref={container} className="flex h-full w-full cursor-crosshair" />
