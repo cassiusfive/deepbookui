@@ -99,8 +99,6 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { data: quantityOut } = useQuantityOut(0, total);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("SUBMIT", values);
-    console.log(pool.quote_asset_decimals);
     placeLimitOrder(amount, limitPrice, "bid");
   }
 
@@ -109,7 +107,6 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
       if (type == "mid" && midPrice) {
         form.setValue("limitPrice", Number(pool.round.quote(midPrice)));
       } else if (bestBid) {
-        console.log(bestBid);
         form.setValue("limitPrice", Number(pool.round.quote(bestBid)));
       }
     },
@@ -263,7 +260,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
       </Form>
       <div className="flex h-full flex-col justify-between gap-3 border-t p-3 text-xs">
         <div className="flex flex-col gap-1">
-          <div className="flex justify-between text-gray-500">
+          <div className="flex justify-between text-muted-foreground">
             <div>TOTAL</div>
             <div>
               {total
@@ -272,7 +269,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
             </div>
           </div>
 
-          <div className="flex justify-between text-gray-500">
+          <div className="flex justify-between text-muted-foreground">
             <div>FEE</div>
             <div>
               {quantityOut ? `${quantityOut?.deepRequired} DEEP` : "--"}
@@ -322,14 +319,14 @@ export default function Trade() {
       <Tabs defaultValue={positionType} className="h-full">
         <TabsList className="h-12 w-full rounded-none p-0">
           <TabsTrigger
-            className="h-full w-1/2 rounded-none bg-gray-100 text-gray-500 shadow-none data-[state=active]:bg-gray-200 data-[state=active]:text-[#26a69a] data-[state=active]:shadow-none"
+            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:bg-background data-[state=active]:border-b data-[state=active]:text-[#26a69a] data-[state=active]:shadow-none"
             value="buy"
             onClick={() => setPositionType("buy")}
           >
             Buy
           </TabsTrigger>
           <TabsTrigger
-            className="h-full w-1/2 rounded-none bg-gray-100 text-gray-500 shadow-none data-[state=active]:bg-gray-200 data-[state=active]:text-[#ef5350] data-[state=active]:shadow-none"
+            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:bg-background data-[state=active]:border-b data-[state=active]:text-[#ef5350] data-[state=active]:shadow-none"
             value="sell"
             onClick={() => setPositionType("sell")}
           >
@@ -340,14 +337,14 @@ export default function Trade() {
           <Tabs defaultValue={orderType} className="w-full py-3">
             <TabsList className="w-full justify-start gap-3 bg-transparent p-0 pl-3">
               <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
+                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
                 value="limit"
                 onClick={() => setOrderType("limit")}
               >
                 LIMIT
               </TabsTrigger>
               <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
+                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
                 value="market"
                 onClick={() => setOrderType("market")}
               >
@@ -372,14 +369,14 @@ export default function Trade() {
           <Tabs defaultValue={orderType} className="w-full py-3">
             <TabsList className="w-full justify-start gap-3 bg-transparent p-0 pl-3">
               <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
+                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
                 value="limit"
                 onClick={() => setOrderType("limit")}
               >
                 LIMIT
               </TabsTrigger>
               <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-gray-100 data-[state=active]:shadow-none"
+                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
                 value="market"
                 onClick={() => setOrderType("market")}
               >

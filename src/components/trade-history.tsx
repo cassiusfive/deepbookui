@@ -31,7 +31,7 @@ export default function TradeHistory() {
 
   return (
     <table className="w-full text-xs">
-      <thead className="sticky top-0 h-6 bg-background text-right text-gray-500 shadow-[0_0_0_1px_rgb(229,231,235)]">
+      <thead className="sticky top-0 h-6 bg-background text-right text-muted-foreground shadow-[0_0_0_1px_hsl(var(--border))]">
         <tr>
           <th className="w-full text-nowrap pl-2 pr-4">{`AMOUNT (${pool.base_asset_symbol})`}</th>
           <th className="w-auto text-nowrap pr-6">{`AMOUNT (${pool.quote_asset_symbol})`}</th>

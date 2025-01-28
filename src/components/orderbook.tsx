@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { useCurrentPool } from "@/contexts/pool";
+import { useTheme } from "@/contexts/theme";
 
 type OrderbookEntriesProps = {
   entries: OrderbookEntry[];
@@ -15,6 +16,7 @@ type OrderbookEntriesProps = {
 };
 
 function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
+  const { theme } = useTheme()
   const pool = useCurrentPool();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -64,7 +66,7 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
             onMouseLeave={() => setHoveredIndex(null)}
             style={{
               backgroundImage: `linear-gradient(to right,${bgColor} ${barWidth}%,transparent ${barWidth}%)`,
-              backgroundColor: highlighted ? "rgba(0,0,0, 0.05)" : "",
+              backgroundColor: highlighted ? theme === "dark" ? "rgba(255,255,255, 0.1)" : "rgba(0,0,0, 0.05)" : "",
             }}
           >
             <td className="relative pr-6 text-right">
@@ -103,7 +105,7 @@ export default function OrderBook() {
 
   return (
     <table className="h-full w-full text-xs">
-      <thead className="sticky top-0 z-10 h-6 bg-background text-gray-500 shadow-[0_0_0_1px_rgb(229,231,235)]">
+      <thead className="sticky top-0 z-10 h-6 bg-background text-muted-foreground shadow-[0_0_0_1px_hsl(var(--border))]">
         <tr>
           <th className="w-full text-nowrap pr-6 text-right">{`Amount (${pool.base_asset_symbol})`}</th>
           <th className="w-auto text-nowrap pr-3">{`Price (${pool.quote_asset_symbol})`}</th>
@@ -116,9 +118,9 @@ export default function OrderBook() {
             colSpan={2}
             className="text-small w-full items-center justify-center py-1 text-center"
           >
-            <span className="text-gray-500">SPREAD</span>
+            <span className="text-muted-foreground">SPREAD</span>
             <span className="mx-6">{data!.spreadAmount.toFixed(5)}</span>
-            <span className="">{data!.spreadPercent.toFixed(4)}%</span>
+            <span>{data!.spreadPercent.toFixed(4)}%</span>
           </td>
         </tr>
         <OrderbookEntries entries={data!.bids} type="bid" />

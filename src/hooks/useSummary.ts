@@ -162,9 +162,7 @@ async function fetchSummary(): Promise<Pair[]> {
         price_change_percent_24h: 0.0,
       },
     ];
-
-  const data = await deepbookApiClient(`/summary`);
-  return data;
+  return await deepbookApiClient(`/summary`);
 }
 
 export function useSummary() {

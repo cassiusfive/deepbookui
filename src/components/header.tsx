@@ -66,7 +66,7 @@ export default function Navbar() {
       <div className="flex gap-8">
         <Sheet>
           <SheetTrigger>
-            <div className="flex items-center justify-center gap-2 rounded-full bg-gray-200 px-3 py-2">
+            <div className="flex items-center justify-center gap-2 rounded-full bg-secondary px-3 py-2">
               <div className="flex">
                 <img
                   src={baseAssetImg}
@@ -92,7 +92,7 @@ export default function Navbar() {
 
         <div className="flex gap-8">
           <div className="flex flex-col">
-            <div className="text-sm text-gray-500">LAST PRICE (24H)</div>
+            <div className="text-sm text-muted-foreground">LAST PRICE (24H)</div>
             <div className="">
               ${price}{" "}
               <span className="text-red-500">
@@ -101,17 +101,17 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-gray-500">24H VOLUME</div>
+            <div className="text-sm text-muted-foreground">24H VOLUME</div>
             <div className="">
               ${(pair.base_volume + pair.quote_volume).toFixed(0)}
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-gray-500">24H HIGH</div>
+            <div className="text-sm text-muted-foreground">24H HIGH</div>
             <div className="">${pair.highest_price_24h.toFixed(4)}</div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-gray-500">24H LOW</div>
+            <div className="text-sm text-muted-foreground">24H LOW</div>
             <div className="">${pair.lowest_price_24h.toFixed(4)}</div>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function Navbar() {
             <div className="flex flex-col gap-6">
               <div className="border-b pb-4">
                 <h2>Theme</h2>
-                <p className="pb-4 text-xs text-gray-500">
+                <p className="pb-4 text-xs text-muted-foreground">
                   Change the theme of the application
                 </p>
                 <div className="flex items-center gap-2">
