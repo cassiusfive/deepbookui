@@ -76,11 +76,11 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
       }
 
       if (positionType == "sell" && data.amount > baseAssetBalance) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Insufficient ${pool.base_asset_symbol} balance`,
-          path: ["amount"],
-        });
+        // ctx.addIssue({
+        //   code: z.ZodIssueCode.custom,
+        //   message: `Insufficient ${pool.base_asset_symbol} balance`,
+        //   path: ["amount"],
+        // });
       }
     });
 
@@ -99,7 +99,11 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { data: quantityOut } = useQuantityOut(0, total);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    placeLimitOrder(amount, limitPrice, "bid");
+    placeLimitOrder(
+      values.amount,
+      values.limitPrice,
+      positionType === "buy" ? "bid" : "ask",
+    );
   }
 
   const updateLimitPrice = useCallback(
@@ -319,14 +323,14 @@ export default function Trade() {
       <Tabs defaultValue={positionType} className="h-full">
         <TabsList className="h-12 w-full rounded-none p-0">
           <TabsTrigger
-            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:bg-background data-[state=active]:border-b data-[state=active]:text-[#26a69a] data-[state=active]:shadow-none"
+            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:border-b data-[state=active]:bg-background data-[state=active]:text-[#26a69a] data-[state=active]:shadow-none"
             value="buy"
             onClick={() => setPositionType("buy")}
           >
             Buy
           </TabsTrigger>
           <TabsTrigger
-            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:bg-background data-[state=active]:border-b data-[state=active]:text-[#ef5350] data-[state=active]:shadow-none"
+            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:border-b data-[state=active]:bg-background data-[state=active]:text-[#ef5350] data-[state=active]:shadow-none"
             value="sell"
             onClick={() => setPositionType("sell")}
           >

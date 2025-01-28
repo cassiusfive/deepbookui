@@ -3,6 +3,7 @@ import { useCurrentPool } from "@/contexts/pool";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
+  useSuiClient,
 } from "@mysten/dapp-kit";
 import { coinWithBalance, Transaction } from "@mysten/sui/transactions";
 import { useContext } from "react";
@@ -19,8 +20,19 @@ export function useDeepBook() {
   const context = useContext(DeepBookContext);
   const account = useCurrentAccount();
   const pool = useCurrentPool();
+  const client = useSuiClient();
   const { mutateAsync: signAndExecuteTransaction } =
-    useSignAndExecuteTransaction();
+    useSignAndExecuteTransaction({
+      execute: async ({ bytes, signature }) =>
+        await client.executeTransactionBlock({
+          transactionBlock: bytes,
+          signature,
+          options: {
+            showRawEffects: true,
+            showObjectChanges: true,
+          },
+        }),
+    });
 
   if (!context) {
     throw new Error("useDeepBook must be used within a DeepBookProvider");

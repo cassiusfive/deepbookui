@@ -48,8 +48,7 @@ export default function Navbar() {
     else quoteAssetImg = notFound;
   }
 
-  const account = useCurrentAccount();
-  if (account) console.log(`connected to ${account.address}`);
+  // const account = useCurrentAccount();
 
   if (isSummaryLoading || isPriceLoading) {
     return <div className="border-b"></div>;
@@ -92,7 +91,9 @@ export default function Navbar() {
 
         <div className="flex gap-8">
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground">LAST PRICE (24H)</div>
+            <div className="text-sm text-muted-foreground">
+              LAST PRICE (24H)
+            </div>
             <div className="">
               ${price}{" "}
               <span className="text-red-500">
