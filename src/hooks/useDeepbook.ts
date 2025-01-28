@@ -148,5 +148,20 @@ export function useDeepBook() {
     });
   };
 
-  return { context, placeLimitOrder };
+  const withdraw = () => {
+    if (!account) throw Error();
+
+    const tx = new Transaction();
+    tx.add(
+      context.balanceManager.withdrawAllFromManager(
+        "MANAGER_1",
+        pool.base_asset_symbol,
+        account?.address,
+      ),
+    );
+
+    return signAndExecuteTransaction({ transaction: tx });
+  };
+
+  return { context, placeLimitOrder, withdraw };
 }

@@ -21,7 +21,10 @@ import { useCurrentPool } from "@/contexts/pool";
 import { useQuantityOut } from "@/hooks/useQuantityOut";
 import { usePrice } from "@/hooks/usePrice";
 import { useOrderbook } from "@/hooks/useOrderbook";
-import { useBalancesFromCurrentPool } from "@/hooks/useBalances";
+import {
+  useBalancesFromCurrentPool,
+  useManagerBalances,
+} from "@/hooks/useBalances";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -299,7 +302,9 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
 
 export default function Trade() {
   const pool = useCurrentPool();
+  const { withdraw } = useDeepBook();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
+  const { data: bm } = useManagerBalances();
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
@@ -310,14 +315,33 @@ export default function Trade() {
         <h1 className="pb-2">Available to trade</h1>
         <div className="flex justify-between text-sm">
           <div>{pool.base_asset_symbol}</div>
-          <div className="text-right">{pool.round.base(baseAssetBalance)}</div>
+          <div className="text-right">
+            {pool.round.display(baseAssetBalance)}
+          </div>
         </div>
         <div className="flex justify-between text-sm">
           <div>{pool.quote_asset_symbol}</div>
           <div className="text-right">
-            ${quoteAssetBalance.toFixed(pool.displayPrecision)}
+            {pool.round.display(quoteAssetBalance)}
           </div>
         </div>
+        <h1 className="pb-2 pt-4">Settled</h1>
+        <div className="flex justify-between text-sm">
+          <div>{pool.base_asset_symbol}</div>
+          <div className="text-right">
+            {pool.round.display(bm?.settled_balances.base || 0)}
+          </div>
+        </div>
+        <div className="flex justify-between text-sm">
+          <div>{pool.quote_asset_symbol}</div>
+          <div className="text-right">
+            {pool.round.display(bm?.settled_balances.quote || 0)}
+          </div>
+        </div>
+
+        <Button className="mt-3" onClick={() => withdraw()}>
+          Withdraw
+        </Button>
       </div>
 
       <Tabs defaultValue={positionType} className="h-full">
