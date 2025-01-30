@@ -1,29 +1,24 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useSuiClientQueries } from "@mysten/dapp-kit";
 import { useSummary } from "@/hooks/useSummary";
+import { usePools } from "@/hooks/usePools";
 import { Input } from "@/components/ui/input";
 import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
 import notFound from "@/assets/not-found.png";
-import { usePools } from "@/hooks/usePools";
+import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
 
 export default function PairTable() {
   const { data: pools } = usePools();
   const { data: summaryData } = useSummary();
 
-  const metadataResults = useSuiClientQueries({
-    queries: pools!.flatMap((pool) => [
-      {
-        method: "getCoinMetadata" as const,
-        params: { coinType: pool.quote_asset_id },
-      },
-      {
-        method: "getCoinMetadata" as const,
-        params: { coinType: pool.base_asset_id },
-      },
-    ]),
-  });
+  if (!pools || !summaryData) return
+
+  const poolAssetMetadata = pools!.flatMap((pool) => [
+    usePoolAssetMetadata(pool.base_asset_id, pool.quote_asset_id)
+  ])
+
+  if (!poolAssetMetadata) return
 
   const [inputValue, setInputValue] = useState<string>("");
   const input = inputValue.toLowerCase().trim();
@@ -61,18 +56,21 @@ export default function PairTable() {
           );
           if (!pool) return <div>pool not found</div>;
 
-          let baseAssetImg = metadataResults.find(
-            (res) => res.data?.symbol === pair.base_currency,
-          )?.data?.iconUrl;
+          let baseAssetImg = poolAssetMetadata.find(
+            (pool) => pool.baseAssetMetadata?.symbol === pair.base_currency,
+          )?.baseAssetMetadata?.iconUrl;
+
           if (!baseAssetImg) {
             if (pair.base_currency.includes("SUI")) baseAssetImg = suiImg;
             else if (pair.base_currency.includes("USDC"))
               baseAssetImg = usdcImg;
             else baseAssetImg = notFound;
           }
-          let quoteAssetImg = metadataResults.find(
-            (res) => res.data?.symbol === pair.quote_currency,
-          )?.data?.iconUrl;
+
+          let quoteAssetImg = poolAssetMetadata.find(
+            (pool) => pool.quoteAssetMetadata?.symbol === pair.quote_currency,
+          )?.quoteAssetMetadata?.iconUrl
+
           if (!quoteAssetImg) {
             if (pair.quote_currency.includes("SUI")) quoteAssetImg = suiImg;
             else if (pair.quote_currency.includes("USDC"))
