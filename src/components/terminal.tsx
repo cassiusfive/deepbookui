@@ -1,12 +1,12 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 
+import { usePools } from "@/hooks/usePools";
+import { PoolContext } from "@/contexts/pool";
 import Header from "@/components/header";
 import Chart from "@/components/chart";
 import Trade from "@/components/trade";
 import MarketOverview from "@/components/market-overview";
-import User from "@/components/user";
-import { usePools } from "@/hooks/usePools";
-import { PoolContext } from "@/contexts/pool";
+import User from "@/components/user-orders";
 
 const route = getRouteApi("/trade/$contractAddress");
 
