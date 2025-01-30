@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useDeepBook } from "@/hooks/useDeepbook";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +17,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDeepBook } from "@/contexts/deepbook";
 import { useCurrentPool } from "@/contexts/pool";
+import { useMidPrice } from "@/hooks/useMidPrice";
 import { useQuantityOut } from "@/hooks/useQuantityOut";
-import { usePrice } from "@/hooks/usePrice";
 import { useOrderbook } from "@/hooks/useOrderbook";
 import {
   useBalancesFromCurrentPool,
-  useManagerBalances,
+  useManagerBalance,
 } from "@/hooks/useBalances";
 
 type PositionType = "buy" | "sell";
@@ -35,12 +36,15 @@ type FormProps = {
 };
 
 function OrderForm({ positionType, orderExecutionType }: FormProps) {
-  const { placeLimitOrder } = useDeepBook();
+  const account = useCurrentAccount();
+  const dbClient = useDeepBook();
+  if (!dbClient || !account) return
+
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
 
   const { data: orderbook } = useOrderbook();
   const pool = useCurrentPool();
-  const { data: priceData } = usePrice(pool.pool_name);
+  const { data: priceData } = useMidPrice(pool.pool_name);
 
   const bestBid = useMemo(() => orderbook?.bids[0].price, [orderbook]);
   const midPrice = useMemo(() => priceData, [priceData]);
@@ -102,11 +106,14 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { data: quantityOut } = useQuantityOut(0, total);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    placeLimitOrder(
-      values.amount,
-      values.limitPrice,
-      positionType === "buy" ? "bid" : "ask",
-    );
+    dbClient?.deepBook.placeLimitOrder({
+      poolKey: pool.pool_id,
+      balanceManagerKey: "MANAGER_1",
+      clientOrderId: Date.now().toString(), // client side order number
+      price: values.limitPrice,
+      quantity: values.amount,
+      isBid: positionType === "buy"
+    })
   }
 
   const updateLimitPrice = useCallback(
@@ -293,7 +300,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
             (orderExecutionType === "limit" && !form.getValues("limitPrice"))
           }
         >
-          {positionType == "buy" ? "Buy" : "Sell"} SUI
+          {positionType == "buy" ? "Buy" : "Sell"} {pool.base_asset_symbol}
         </Button>
       </div>
     </div>
@@ -302,9 +309,9 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
 
 export default function Trade() {
   const pool = useCurrentPool();
-  const { withdraw } = useDeepBook();
+  const dbClient = useDeepBook();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-  const { data: bm } = useManagerBalances();
+  const { data: bm } = useManagerBalance();
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
@@ -339,7 +346,7 @@ export default function Trade() {
           </div>
         </div>
 
-        <Button className="mt-3" onClick={() => withdraw()}>
+        <Button className="mt-3" onClick={() => dbClient?.deepBook.withdrawSettledAmounts(pool.pool_id, "MANAGER_1")}>
           Withdraw
         </Button>
       </div>

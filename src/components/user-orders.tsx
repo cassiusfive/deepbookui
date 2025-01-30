@@ -1,6 +1,8 @@
-import { useEffect } from "react";
-import { useOpenOrders } from "@/hooks/useOpenOrders";
+import { Transaction } from "@mysten/sui/transactions";
 import { useCurrentPool } from "@/contexts/pool";
+import { useDeepBook } from "@/contexts/deepbook";
+import { useOpenOrders } from "@/hooks/useOpenOrders";
+import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 import {
   Table,
   TableBody,
@@ -9,34 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { BookX } from "lucide-react";
-import { useDeepBook } from "@/hooks/useDeepbook";
-
-type Order = {
-  time: Date;
-  pair: string;
-  type: "limit" | "market";
-  side: "buy" | "sell";
-  price: number;
-  amount: number;
-  status: "filled" | "failed" | "canceled";
-};
-
-const ORDERS: Order[] = [];
-
-for (let i = 0; i < 10; i++) {
-  ORDERS.push({
-    time: new Date(new Date().getTime() - Math.random() * 25 * 60 * 60 * 1000),
-    pair: "SUI-USDC",
-    type: Math.random() < 0.5 ? "limit" : "market",
-    side: Math.random() < 0.5 ? "buy" : "sell",
-    price: parseFloat((Math.random() * 0.01).toFixed(8)), // Random price
-    amount: parseFloat((Math.random() * 20).toFixed(2)), // Random amount
-    status: "filled",
-  });
-}
-
-ORDERS.sort((a, b) => b.time.getTime() - a.time.getTime());
+import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 
 function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0");
@@ -46,14 +23,33 @@ function formatTime(date: Date): string {
   return `${hours}:${minutes}:${seconds}`;
 }
 
-const MANAGER_KEY = "";
+export default function OpenOrders() {
+  const dbClient = useDeepBook();
+  const pool = useCurrentPool()
+  const { data: openOrders, isLoading } = useOpenOrders(pool.pool_name, BALANCE_MANAGER_KEY)
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
-export default function User() {
-  const deepbook = useDeepBook();
-  const pool = useCurrentPool();
+  if (!dbClient) return
+  if (isLoading) return <div>loading</div>
+  if (!openOrders) return
 
-  const orders = useOpenOrders(pool.pool_id, MANAGER_KEY);
-  console.log("ORDERS", orders.data)
+  const handleCancelOrder = async(orderId: string) => {
+    const tx = new Transaction();
+    
+    dbClient.deepBook.cancelOrder(
+      pool.pool_name,
+      BALANCE_MANAGER_KEY,
+      orderId
+    )(tx);
+
+    signAndExecuteTransaction({
+      transaction: tx
+    }, {
+      onSuccess: result => {
+        console.log('executed transaction', result);
+      }
+    })
+  }
 
   return (
     <div className="h-full">
@@ -73,24 +69,26 @@ export default function User() {
             </TableRow>
           </TableHeader>
           <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
-            {ORDERS.length > 0 &&
-              ORDERS.map((order) => (
+          {openOrders.length > 0 &&
+            openOrders.map((order) => {
+              console.log(order)
+              return (
                 <TableRow>
-                  <TableCell>{formatTime(order.time)}</TableCell>
-                  <TableCell>{order.pair}</TableCell>
-                  <TableCell>{order.type}</TableCell>
-                  <TableCell>{order.side}</TableCell>
-                  <TableCell>{order.price.toFixed(4)} USDC</TableCell>
-                  <TableCell>{order.amount.toFixed(4)}</TableCell>
-                  <TableCell>
-                    {(order.price * order.amount).toFixed(4)} USDC
-                  </TableCell>
+                  <TableCell>{formatTime(new Date(order.expire_timestamp))}</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell>USDC</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell>USDC</TableCell>
                   <TableCell>{order.status}</TableCell>
+                  <TableCell><Button onClick={() => handleCancelOrder(order.order_id)}>Cancel</Button></TableCell>
                 </TableRow>
-              ))}
+              )
+            })}
           </TableBody>
         </Table>
-        {!ORDERS.length && (
+        {!openOrders.length && (
           <div className="flex h-[calc(100%-40px)] flex-col items-center justify-center text-xs text-muted-foreground">
             <BookX />
             <div>No orders</div>
