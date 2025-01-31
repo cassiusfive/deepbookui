@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useCurrentAccount } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,8 @@ import {
   useBalancesFromCurrentPool,
   useManagerBalance,
 } from "@/hooks/useBalances";
+import { Transaction } from "@mysten/sui/transactions";
+import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -38,6 +40,7 @@ type FormProps = {
 function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const account = useCurrentAccount();
   const dbClient = useDeepBook();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   if (!dbClient || !account) return
 
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
@@ -105,14 +108,40 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
 
+
+  // DOESN'T WORK
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const tx = new Transaction()
+
+    let balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY)
+    if (!balanceManager) {
+      dbClient?.balanceManager.createAndShareBalanceManager()(tx)
+    }
+
+    const assetDecimals = positionType === "buy" ? pool.quote_asset_decimals : pool.base_asset_decimals;
+    const assetType = positionType === "buy" ? pool.quote_asset_name : pool.base_asset_name;
+
+    dbClient?.balanceManager.depositIntoManager(
+      BALANCE_MANAGER_KEY, 
+      assetType, 
+      values.amount * values.limitPrice * 10 ** assetDecimals
+    )(tx)
+
     dbClient?.deepBook.placeLimitOrder({
-      poolKey: pool.pool_id,
-      balanceManagerKey: "MANAGER_1",
+      poolKey: pool.pool_name,
+      balanceManagerKey: BALANCE_MANAGER_KEY,
       clientOrderId: Date.now().toString(), // client side order number
       price: values.limitPrice,
       quantity: values.amount,
       isBid: positionType === "buy"
+    })(tx)
+
+    signAndExecuteTransaction({
+      transaction: tx
+    }, {
+      onSuccess: result => {
+        console.log("executed transaction", result);
+      }
     })
   }
 
@@ -311,7 +340,8 @@ export default function Trade() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-  const { data: bm } = useManagerBalance();
+  const { data: baseAssetManagerBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_name);
+  const { data: quoteAssetManagerBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_name);
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
@@ -332,17 +362,17 @@ export default function Trade() {
             {pool.round.display(quoteAssetBalance)}
           </div>
         </div>
-        <h1 className="pb-2 pt-4">Settled</h1>
+        <h1 className="pb-2 pt-4">Balance Manager Funds</h1>
         <div className="flex justify-between text-sm">
           <div>{pool.base_asset_symbol}</div>
           <div className="text-right">
-            {pool.round.display(bm?.settled_balances.base || 0)}
+            {pool.round.display(baseAssetManagerBalance?.balance || 0)}
           </div>
         </div>
         <div className="flex justify-between text-sm">
           <div>{pool.quote_asset_symbol}</div>
           <div className="text-right">
-            {pool.round.display(bm?.settled_balances.quote || 0)}
+            {pool.round.display(quoteAssetManagerBalance?.balance || 0)}
           </div>
         </div>
 
