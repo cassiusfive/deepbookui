@@ -1,12 +1,12 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 
+import { usePools } from "@/hooks/usePools";
+import { PoolContext } from "@/contexts/pool";
 import Header from "@/components/header";
 import Chart from "@/components/chart";
 import Trade from "@/components/trade";
 import MarketOverview from "@/components/market-overview";
-import User from "@/components/user";
-import { usePools } from "@/hooks/usePools";
-import { PoolContext } from "@/contexts/pool";
+import User from "@/components/user-orders";
 
 const route = getRouteApi("/trade/$contractAddress");
 
@@ -95,9 +95,7 @@ export default function Terminal() {
     return <div>loading</div>;
   }
 
-  if (!poolsData) {
-    return console.log("pools undefined");
-  }
+  if (!poolsData) return <div>loading</div>
 
   // if invalid contract address, route to Deep-Sui pool
   if (!selectedPool) {

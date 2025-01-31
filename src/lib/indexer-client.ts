@@ -1,7 +1,7 @@
 // const BASE_URL = "https://deepbook-indexer.mainnet.mystenlabs.com";
 const BASE_URL = "/deepbook"; // proxy, see vite.config.ts
 
-export default async function deepbookApiClient(
+export default async function dbIndexerClient(
   endpoint: string,
   options: RequestInit = {},
 ) {

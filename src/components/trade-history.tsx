@@ -1,22 +1,5 @@
 import { useCurrentPool } from "@/contexts/pool";
-
-type Trade = {
-  amount: number;
-  price: number;
-  type: "buy" | "sell";
-  time: Date;
-};
-
-const TRADE_HISTORY: Trade[] = [];
-for (let i = 0; i < 50; i++) {
-  TRADE_HISTORY.push({
-    amount: parseFloat((Math.random() * 20).toFixed(2)), // Random amount
-    price: parseFloat((Math.random() * 0.01).toFixed(8)), // Random price
-    type: Math.random() < 0.5 ? "buy" : "sell",
-    time: new Date(new Date().getTime() - Math.random() * 25 * 60 * 60 * 1000),
-  });
-}
-TRADE_HISTORY.sort((a, b) => b.time.getTime() - a.time.getTime());
+import { useTrades } from "@/hooks/useTrades";
 
 function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0");
@@ -28,6 +11,10 @@ function formatTime(date: Date): string {
 
 export default function TradeHistory() {
   const pool = useCurrentPool();
+  const { data: trades, isLoading } = useTrades(pool.pool_name, 50);
+
+  if (isLoading) return <div>loading</div>
+  if (!trades) return <div>failed to fetch trade history</div>
 
   return (
     <table className="w-full text-xs">
@@ -39,16 +26,16 @@ export default function TradeHistory() {
         </tr>
       </thead>
       <tbody>
-        {TRADE_HISTORY.map((trade, index) => (
+        {trades.map((trade, index) => (
           <tr key={index} className="text-right">
-            <th className="text-nowrap pr-4">{trade.amount}</th>
+            <th className="text-nowrap pr-4">{trade.base_volume}</th>
             <th
               className={`text-nowrap pr-6 ${trade.type == "buy" ? "text-[#26a69a]" : "text-[#ef5350]"}`}
             >
-              {trade.price.toFixed(4)}
+              {trade.quote_volume}
             </th>
             <th className="text-nowrap pr-3 text-muted-foreground">
-              {formatTime(trade.time)}
+              {formatTime(new Date(trade.timestamp))}
             </th>
           </tr>
         ))}

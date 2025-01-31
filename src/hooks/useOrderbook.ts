@@ -1,5 +1,5 @@
 import { useCurrentPool } from "@/contexts/pool";
-import deepbookApiClient from "@/lib/deepbook/apiClient";
+import dbIndexerClient from "@/lib/indexer-client";
 import { useQuery } from "@tanstack/react-query";
 
 export type OrderbookEntry = {
@@ -18,7 +18,7 @@ async function fetchOrderbookInfo(
   poolId: string,
   depth: number = 30,
 ): Promise<OrderbookInfo> {
-  const data = await deepbookApiClient(`/orderbook/${poolId}?depth=${depth}`);
+  const data = await dbIndexerClient(`/orderbook/${poolId}?depth=${depth}`);
 
   const asks: OrderbookEntry[] = data.asks.map((ask: [string, string]) => ({
     price: parseFloat(ask[0]),
@@ -47,7 +47,6 @@ export function useOrderbook() {
   return useQuery({
     queryKey: ["orderbook", pool.pool_name],
     queryFn: () => fetchOrderbookInfo(pool.pool_name),
-    refetchInterval: 500,
-    refetchIntervalInBackground: true,
+    refetchInterval: 1000,
   });
 }

@@ -31,12 +31,6 @@ export function useCurrentPool() {
     throw Error("useCurrentPool must be used within PoolProvider");
   }
 
-  // const quotePrecision =
-  //   context.quote_asset_decimals - Math.round(Math.log10(context.tick_size));
-  // const basePrecision =
-  //   context.base_asset_decimals - Math.round(Math.log10(context.lot_size));
-  //
-
   const quotePrecision =
     9 -
     Math.log10(context.tick_size) +

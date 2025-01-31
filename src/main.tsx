@@ -16,6 +16,7 @@ import Terminal from "@/components/terminal.tsx";
 import { DeepBookProvider } from "@/contexts/deepbook";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+import { NetworkProvider } from "@/contexts/network";
 import { useTheme, ThemeProvider } from "@/contexts/theme";
 import { lightTheme } from "@/theme/light";
 import { darkTheme } from "@/theme/dark";
@@ -62,8 +63,8 @@ declare module "@tanstack/react-router" {
 }
 
 const queryClient = new QueryClient();
+
 const networks = {
-  devnet: { url: getFullnodeUrl("devnet") },
   testnet: { url: getFullnodeUrl("testnet") },
   mainnet: { url: getFullnodeUrl("mainnet") },
 };
@@ -71,23 +72,26 @@ const networks = {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <QueryClientProvider client={queryClient}>
-        <SuiClientProvider networks={networks} defaultNetwork="mainnet">
-          <WalletProviderWrapper>
-            <DeepBookProvider>
-              <TooltipProvider delayDuration={0}>
-                <RouterProvider router={router} />
-              </TooltipProvider>
-            </DeepBookProvider>
-          </WalletProviderWrapper>
-        </SuiClientProvider>
-      </QueryClientProvider>
+      <NetworkProvider>
+        <QueryClientProvider client={queryClient}>
+          <SuiClientProvider networks={networks}>
+            <WalletProviderWrapper>
+              <DeepBookProvider>
+                <TooltipProvider delayDuration={0}>
+                  <RouterProvider router={router} />
+                </TooltipProvider>
+              </DeepBookProvider>
+            </WalletProviderWrapper>
+          </SuiClientProvider>
+        </QueryClientProvider>
+      </NetworkProvider>
     </ThemeProvider>
-  </StrictMode>,
+  </StrictMode>
 );
 
 function WalletProviderWrapper({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
+  
   return (
     <WalletProvider autoConnect theme={themes[theme]}>
       {children}

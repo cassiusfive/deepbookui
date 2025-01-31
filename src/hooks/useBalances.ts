@@ -1,50 +1,32 @@
 import { useDeepBook } from "@/contexts/deepbook";
 import { useCurrentPool } from "@/contexts/pool";
-import DeepBookMarketMaker from "@/lib/deepbook";
-import { useSuiClientQuery } from "@mysten/dapp-kit";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { normalizeStructTag } from "@mysten/sui/utils";
 import { useQuery } from "@tanstack/react-query";
-import { Pool } from "./usePools";
 
 export function useBalances() {
   const account = useCurrentAccount();
-
-  return useSuiClientQuery(
-    "getAllBalances",
-    { owner: account?.address ?? "" },
-    { enabled: !!account },
-  );
-}
-
-async function fetchManagerBalances(deepbook: DeepBookMarketMaker, pool: Pool) {
-  try {
-    const account = await deepbook!.account(pool.pool_name, "MANAGER_1");
-    const { settled_balances, owed_balances } = account;
-    return { settled_balances, owed_balances };
-  } catch {
-    return {
-      settled_balances: {
-        base: 0,
-        quote: 0,
-        deep: 0,
-      },
-      owed_balances: {
-        base: 0,
-        quote: 0,
-        deep: 0,
-      },
-    };
-  }
-}
-
-export function useManagerBalances() {
-  const deepbook = useDeepBook();
-  const pool = useCurrentPool();
+  const dbClient = useDeepBook();
 
   return useQuery({
-    queryKey: ["useManagerBalances"],
-    queryFn: () => fetchManagerBalances(deepbook, pool),
+    queryKey: ["walletBalances", account?.address],
+    queryFn: async () => {
+      return await dbClient?.client.getAllBalances({
+        owner: account!.address
+      });
+    },
+    enabled: !!dbClient && !!account,
+    refetchInterval: 1000,
+  });
+}
+
+export function useManagerBalance(managerKey: string, coinKey: string) {
+  const dbClient = useDeepBook();
+
+  return useQuery({
+    queryKey: ["managerBalance", managerKey, coinKey],
+    queryFn: () => dbClient?.checkManagerBalance(managerKey, coinKey),
+    enabled: !!dbClient
   });
 }
 

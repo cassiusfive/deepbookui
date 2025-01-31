@@ -21,6 +21,8 @@ export interface DeepbookPackageIds {
   DEEP_TREASURY_ID: string;
 }
 
+export const BALANCE_MANAGER_KEY = "MANAGER_1"
+
 export const testnetPackageIds = {
   DEEPBOOK_PACKAGE_ID:
     "0xcbf4748a965d469ea3a36cf0ccc5743b96c2d0ae6dee0762ed3eca65fac07f7e",

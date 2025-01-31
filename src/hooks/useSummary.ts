@@ -1,4 +1,4 @@
-import deepbookApiClient from "@/lib/deepbook/apiClient";
+import dbIndexerClient from "@/lib/indexer-client";
 import { useQuery } from "@tanstack/react-query";
 
 export type Pair = {
@@ -162,12 +162,13 @@ async function fetchSummary(): Promise<Pair[]> {
         price_change_percent_24h: 0.0,
       },
     ];
-  return await deepbookApiClient(`/summary`);
+  return await dbIndexerClient(`/summary`);
 }
 
 export function useSummary() {
   return useQuery({
     queryKey: ["summary"],
     queryFn: () => fetchSummary(),
+    refetchInterval: 1000,
   });
 }
