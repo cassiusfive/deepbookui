@@ -31,7 +31,7 @@ export function DeepBookProvider({ children }: { children: ReactNode }) {
       client: new SuiClient({ url: getFullnodeUrl(network) }),
       env: network,
       address: account?.address || "",
-      balanceManagers: balanceManagerAddress ? {["BALANCE_MANAGER_KEY"]: {
+      balanceManagers: balanceManagerAddress ? {[BALANCE_MANAGER_KEY]: {
         address: balanceManagerAddress,
         tradeCap: undefined
       }} : {},

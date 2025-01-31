@@ -9,7 +9,7 @@ export function useBalances() {
   const dbClient = useDeepBook();
 
   return useQuery({
-    queryKey: ["wallet-balances", account?.address],
+    queryKey: ["walletBalances", account?.address],
     queryFn: async () => {
       return await dbClient?.client.getAllBalances({
         owner: account!.address

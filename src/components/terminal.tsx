@@ -95,9 +95,7 @@ export default function Terminal() {
     return <div>loading</div>;
   }
 
-  if (!poolsData) {
-    return console.log("pools undefined");
-  }
+  if (!poolsData) return <div>loading</div>
 
   // if invalid contract address, route to Deep-Sui pool
   if (!selectedPool) {
