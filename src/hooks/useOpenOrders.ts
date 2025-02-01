@@ -8,7 +8,7 @@ export function useOpenOrders(poolKey: string, managerKey: string) {
     queryKey: ["openOrders", poolKey, managerKey],
     queryFn: async () => {
       const orderIds = await dbClient?.accountOpenOrders(poolKey, managerKey)
-      if (!orderIds || orderIds.length === 0) return
+      if (!orderIds || orderIds.length === 0) return []
       return await dbClient?.getOrders(poolKey, orderIds)
     },
     enabled: !!dbClient,

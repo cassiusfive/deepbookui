@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { Transaction } from "@mysten/sui/transactions";
+import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useOpenOrders } from "@/hooks/useOpenOrders";
+import { useToast } from "@/hooks/use-toast";
+import { useBalanceManagerAccount } from "@/hooks/useBalanceManagerAccount";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 import {
   Tabs,
@@ -20,8 +23,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { BookX, Loader2 } from "lucide-react";
-import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
-import { useBalanceManagerAccount } from "@/hooks/useBalanceManagerAccount";
 
 function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0");
@@ -32,6 +33,7 @@ function formatTime(date: Date): string {
 }
 
 export default function OpenOrders() {
+  const { toast } = useToast()
   const dbClient = useDeepBook();
   const pool = useCurrentPool()
   const { data: openOrders } = useOpenOrders(pool.pool_name, BALANCE_MANAGER_KEY)
@@ -57,7 +59,19 @@ export default function OpenOrders() {
       transaction: tx
     }, {
       onSuccess: result => {
-        console.log("cancled order", result);
+        console.log("canceled order", result);
+        toast({
+          title: `✅ Canceled order ${orderId}`,
+          duration: 3000
+        })
+      },
+      onError: error => {
+        console.error("failed to cancel order", error)
+        toast({
+          title: `❌ Failed to cancel order ${orderId}`,
+          description: error.message,
+          duration: 3000
+        })
       }
     })
 
@@ -79,7 +93,19 @@ export default function OpenOrders() {
       transaction: tx
     }, {
       onSuccess: result => {
-        console.log("withdrew settled funds", result);
+        console.log("withdrew settled balances", result);
+        toast({
+          title: "✅ Withdrew settled balances",
+          duration: 3000
+        })
+      },
+      onError: error => {
+        console.error("failed to withdraw settled balances", error)
+        toast({
+          title: "❌ Failed to withdraw settled balances",
+          description: error.message,
+          duration: 3000
+        })
       }
     })
 
@@ -94,7 +120,7 @@ export default function OpenOrders() {
     <div className="h-full">
       <Tabs defaultValue="open-orders">
         <TabsList className="w-full justify-start rounded-none bg-background px-4 pt-8 pb-6">
-          <TabsTrigger className="data-[state=active]:shadow-none" value="open-orders">Open Orders{openOrders ? ` (${openOrders.length})` : ""}</TabsTrigger>
+          <TabsTrigger className="data-[state=active]:shadow-none" value="open-orders">Open Orders{!openOrders || openOrders.length === 0 ? "" : `(${openOrders.length})`}</TabsTrigger>
           <TabsTrigger className="data-[state=active]:shadow-none" value="trade-history">Trade History</TabsTrigger>
           <TabsTrigger className="data-[state=active]:shadow-none" value="settled-balance">Settled Balance</TabsTrigger>
         </TabsList>

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ import {
 } from "@/hooks/useBalances";
 import { Transaction } from "@mysten/sui/transactions";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
+import { useToast } from "@/hooks/use-toast";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -38,6 +39,7 @@ type FormProps = {
 };
 
 function OrderForm({ positionType, orderExecutionType }: FormProps) {
+  const { toast } = useToast()
   const account = useCurrentAccount();
   const dbClient = useDeepBook();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
@@ -76,7 +78,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
     .superRefine((data, ctx) => {
       if (
         positionType == "buy" &&
-        data.amount * (data.limitPrice || 4.6) > quoteAssetBalance
+        data.amount * data.limitPrice > quoteAssetBalance
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -86,11 +88,11 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
       }
 
       if (positionType == "sell" && data.amount > baseAssetBalance) {
-        // ctx.addIssue({
-        //   code: z.ZodIssueCode.custom,
-        //   message: `Insufficient ${pool.base_asset_symbol} balance`,
-        //   path: ["amount"],
-        // });
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Insufficient ${pool.base_asset_symbol} balance`,
+          path: ["amount"],
+        });
       }
     });
 
@@ -108,39 +110,45 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
 
-
-  // DOESN'T WORK
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>, type: OrderExecutionType) {
     const tx = new Transaction()
 
-    let balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY)
-    if (!balanceManager) {
-      dbClient?.balanceManager.createAndShareBalanceManager()(tx)
+    if (type === "limit") {
+      dbClient?.deepBook.placeLimitOrder({
+        poolKey: pool.pool_name,
+        balanceManagerKey: BALANCE_MANAGER_KEY,
+        clientOrderId: Date.now().toString(), // client side order number
+        price: values.limitPrice,
+        quantity: values.amount,
+        isBid: positionType === "buy"
+      })(tx)
+    } else {
+      dbClient?.deepBook.placeMarketOrder({
+        poolKey: pool.pool_name,
+        balanceManagerKey: BALANCE_MANAGER_KEY,
+        clientOrderId: Date.now().toString(), // client side order number
+        quantity: values.amount,
+        isBid: positionType === "buy"
+      })(tx)
     }
-
-    const assetDecimals = positionType === "buy" ? pool.quote_asset_decimals : pool.base_asset_decimals;
-    const assetType = positionType === "buy" ? pool.quote_asset_name : pool.base_asset_name;
-
-    dbClient?.balanceManager.depositIntoManager(
-      BALANCE_MANAGER_KEY, 
-      assetType, 
-      values.amount * values.limitPrice * 10 ** assetDecimals
-    )(tx)
-
-    dbClient?.deepBook.placeLimitOrder({
-      poolKey: pool.pool_name,
-      balanceManagerKey: BALANCE_MANAGER_KEY,
-      clientOrderId: Date.now().toString(), // client side order number
-      price: values.limitPrice,
-      quantity: values.amount,
-      isBid: positionType === "buy"
-    })(tx)
 
     signAndExecuteTransaction({
       transaction: tx
     }, {
       onSuccess: result => {
-        console.log("executed transaction", result);
+        console.log(`placed ${type} order`, result);
+        toast({
+          title: `✅ Placed ${type} order`,
+          duration: 3000
+        })
+      },
+      onError: error => {
+        console.error(`error placing ${type} order`, error)
+        toast({
+          title: `❌ Failed to place ${type} order`,
+          description: error.message,
+          duration: 3000
+        })
       }
     })
   }
@@ -183,16 +191,19 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
     [pool, limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
   );
 
+  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY)
+
   return (
     <div>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(data => onSubmit(data, orderExecutionType))}
           id="order"
           className="flex flex-col gap-3 space-y-8 px-3 py-3"
         >
           {orderExecutionType == "limit" && (
             <FormField
+              disabled={!balanceManager}
               control={form.control}
               name="limitPrice"
               render={({ field }) => (
@@ -221,6 +232,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                   </FormControl>
                   <div className="!mt-1 flex gap-1">
                     <Button
+                      disabled={!balanceManager}
                       className="h-8 rounded-sm hover:border-gray-300"
                       variant="outline"
                       type="button"
@@ -229,6 +241,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                       MID
                     </Button>
                     <Button
+                      disabled={!balanceManager}
                       className="h-8 rounded-sm hover:border-gray-300"
                       variant="outline"
                       type="button"
@@ -243,6 +256,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
             />
           )}
           <FormField
+            disabled={!balanceManager}
             control={form.control}
             name="amount"
             render={({ field }) => (
@@ -271,6 +285,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                 </FormControl>
                 <div className="!mt-1 flex gap-1">
                   <Button
+                    disabled={!balanceManager}
                     className="h-8 w-1/3 rounded-sm hover:border-gray-300"
                     variant="outline"
                     type="button"
@@ -279,6 +294,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                     25%
                   </Button>
                   <Button
+                    disabled={!balanceManager}
                     className="h-8 w-1/3 rounded-sm hover:border-gray-300"
                     variant="outline"
                     type="button"
@@ -287,6 +303,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                     50%
                   </Button>
                   <Button
+                    disabled={!balanceManager}
                     className="h-8 w-1/3 rounded-sm hover:border-gray-300"
                     variant="outline"
                     type="button"
@@ -324,6 +341,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
           type="submit"
           form="order"
           disabled={
+            !balanceManager ||
             !form.formState.isValid ||
             !form.getValues("amount") ||
             (orderExecutionType === "limit" && !form.getValues("limitPrice"))
@@ -337,14 +355,121 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
 }
 
 export default function Trade() {
+  const { toast } = useToast()
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
+  const account = useCurrentAccount();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
   const { data: baseAssetManagerBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_name);
   const { data: quoteAssetManagerBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_name);
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({ 
+    // @ts-expect-error
+    execute: async ({ bytes, signature }) => await dbClient?.client.executeTransactionBlock({
+      transactionBlock: bytes,
+      signature,
+      options: {
+        showRawEffects: true,
+        showObjectChanges: true,
+      },
+    }),
+  });
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
+
+  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY)
+
+  const handleCreateBalanceManager = () => {
+    const tx = new Transaction()
+    dbClient?.balanceManager.createAndShareBalanceManager()(tx)
+
+    signAndExecuteTransaction({
+      transaction: tx
+    }, {
+      onSuccess: result => {
+        console.log("created balance manager", result);
+        
+        // @ts-expect-error https://docs.sui.io/standards/deepbookv3-sdk
+        const managerAddress: string = result.objectChanges?.find((change) => {
+          return (
+            change.type === "created" &&
+            change.objectType.includes("BalanceManager")
+          );
+        })?.["objectId"];
+        localStorage.setItem(BALANCE_MANAGER_KEY, managerAddress)
+
+        toast({
+          title: "✅ Created balance manager",
+          description: managerAddress,
+          duration: 3000
+        })
+      },
+      onError: error => {
+        console.error("error depositing funds", error)
+        toast({
+          title: "❌ Failed to create Balance Manager",
+          description: error.message,
+          duration: 3000
+        })
+      }
+    })
+  }
+
+  const handleDeposit = () => {
+    const tx = new Transaction()
+
+    dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.base_asset_symbol, 1)(tx)
+    dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.quote_asset_symbol, 1)(tx)
+
+    signAndExecuteTransaction({
+      transaction: tx
+    }, {
+      onSuccess: result => {
+        console.log("deposited funds", result);
+        toast({
+          title: "✅ Deposited funds",
+          description: result.signature,
+          duration: 3000
+        })
+      },
+      onError: error => {
+        console.error("error depositing funds", error)
+        toast({
+          title: "❌ Failed to deposit funds",
+          description: error.message,
+          duration: 3000
+        })
+      },
+    })
+  }
+
+  const handleWithdraw = () => {
+    const tx = new Transaction()
+
+    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.base_asset_symbol, account!.address)(tx)
+    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.quote_asset_symbol, account!.address)(tx)
+
+    signAndExecuteTransaction({
+      transaction: tx
+    }, {
+      onSuccess: result => {
+        console.log("withdrew funds", result);
+        toast({
+          title: "✅ Withdrew funds",
+          description: result.signature,
+          duration: 3000
+        })
+      },
+      onError: error => {
+        console.error("error withdrawing funds", error)
+        toast({
+          title: "❌ Failed to withdraw funds",
+          description: error.message,
+          duration: 3000
+        })
+      }
+    })
+  }
 
   return (
     <div className="flex h-full w-full min-w-fit shrink-0 flex-col">
@@ -356,29 +481,41 @@ export default function Trade() {
             {pool.round.display(baseAssetBalance)}
           </div>
         </div>
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-sm pb-8">
           <div>{pool.quote_asset_symbol}</div>
           <div className="text-right">
             {pool.round.display(quoteAssetBalance)}
           </div>
         </div>
-        <h1 className="pb-2 pt-4">Balance Manager Funds</h1>
-        <div className="flex justify-between text-sm">
-          <div>{pool.base_asset_symbol}</div>
-          <div className="text-right">
-            {pool.round.display(baseAssetManagerBalance?.balance || 0)}
-          </div>
-        </div>
-        <div className="flex justify-between text-sm">
-          <div>{pool.quote_asset_symbol}</div>
-          <div className="text-right">
-            {pool.round.display(quoteAssetManagerBalance?.balance || 0)}
-          </div>
-        </div>
-
-        <Button className="mt-3" onClick={() => dbClient?.deepBook.withdrawSettledAmounts(pool.pool_id, "MANAGER_1")}>
-          Withdraw
-        </Button>
+        {!account ? (
+          <div>Connect your wallet</div>
+        ) : !balanceManager ? (
+          <Button variant="outline" className="w-full" onClick={handleCreateBalanceManager}>Create a balance manager</Button>
+        ) : (
+          <>
+            <h1 className="pb-2">Balance Manager Funds</h1>
+            <div className="flex justify-between text-sm">
+              <div>{pool.base_asset_symbol}</div>
+              <div className="text-right">
+                {pool.round.display(baseAssetManagerBalance?.balance || 0)}
+              </div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <div>{pool.quote_asset_symbol}</div>
+              <div className="text-right">
+                {pool.round.display(quoteAssetManagerBalance?.balance || 0)}
+              </div>
+            </div>
+            <div className="flex w-full justify-center gap-4">
+              <Button className="mt-3 grow" variant="outline" onClick={handleDeposit}>
+                Deposit
+              </Button>
+              <Button className="mt-3 grow" variant="outline" onClick={handleWithdraw}>
+                Withdraw
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       <Tabs defaultValue={positionType} className="h-full">
