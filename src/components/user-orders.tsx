@@ -72,14 +72,15 @@ export default function OpenOrders() {
           description: error.message,
           duration: 3000
         })
+      },
+      onSettled: () => {
+        setloadingCancelOrders(prev => {
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
       }
     })
-
-    setloadingCancelOrders(prev => {
-      const next = new Set(prev);
-      next.delete(orderId);
-      return next;
-    });
   }
 
   const handleClaimSettledFunds = (poolKey: string) => {
@@ -106,20 +107,23 @@ export default function OpenOrders() {
           description: error.message,
           duration: 3000
         })
+      },
+      onSettled: () => {
+        setLoadingClaimSettledBalances(prev => {
+          const next = new Set(prev);
+          next.delete(poolKey);
+          return next;
+        });
       }
     })
 
-    setLoadingClaimSettledBalances(prev => {
-      const next = new Set(prev);
-      next.delete(poolKey);
-      return next;
-    });
+   
   }
 
   return (
     <div className="h-full">
       <Tabs defaultValue="open-orders">
-        <TabsList className="w-full justify-start rounded-none bg-background px-4 pt-8 pb-6">
+        <TabsList className="w-full justify-start rounded-none bg-background px-4 pt-8 pb-6 overflow-x-auto">
           <TabsTrigger className="data-[state=active]:shadow-none" value="open-orders">Open Orders{!openOrders || openOrders.length === 0 ? "" : `(${openOrders.length})`}</TabsTrigger>
           <TabsTrigger className="data-[state=active]:shadow-none" value="trade-history">Trade History</TabsTrigger>
           <TabsTrigger className="data-[state=active]:shadow-none" value="settled-balance">Settled Balance</TabsTrigger>
@@ -178,50 +182,54 @@ export default function OpenOrders() {
           </div>
         </TabsContent>
         <TabsContent value="trade-history" className="mt-0">
-          <Table>
-            <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
-                <TableRow>
-                  <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
-                  <TableHead>PAIR</TableHead>
-                  <TableHead>TYPE</TableHead>
-                  <TableHead>SIDE</TableHead>
-                  <TableHead>PRICE</TableHead>
-                  <TableHead>AMOUNT</TableHead>
-                  <TableHead className="pr-4 text-right">TOTAL</TableHead>
-                </TableRow>
-            </TableHeader>
-          </Table>
+          <div className="relative no-scrollbar h-[180px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
+                  <TableRow>
+                    <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
+                    <TableHead>PAIR</TableHead>
+                    <TableHead>TYPE</TableHead>
+                    <TableHead>SIDE</TableHead>
+                    <TableHead>PRICE</TableHead>
+                    <TableHead>AMOUNT</TableHead>
+                    <TableHead className="pr-4 text-right">TOTAL</TableHead>
+                  </TableRow>
+              </TableHeader>
+            </Table>
+          </div>
         </TabsContent>
         <TabsContent value="settled-balance" className="mt-0">
-          <Table>
-              <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
-                <TableRow>
-                  <TableHead className="pl-4 text-left">PAIR</TableHead>
-                  <TableHead>BASE ASSET AMOUNT</TableHead>
-                  <TableHead>QUOTE ASSET AMOUNT</TableHead>
-                  <TableHead className="pr-4 text-right">ACTION</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
-                <TableRow>
-                  <TableCell>{pool.pool_name}</TableCell>
-                  <TableCell>{balanceManagerAccount?.settled_balances.base}</TableCell>
-                  <TableCell>{balanceManagerAccount?.settled_balances.quote}</TableCell>
-                  <TableCell>
-                        <Button variant="outline" className="text-xs" disabled={loadingClaimSettledBalances.has(pool.pool_name)} onClick={() => handleClaimSettledFunds(pool.pool_name)}>
-                          { loadingClaimSettledBalances.has(pool.pool_name) ? 
-                            (
-                              <>
-                                <Loader2 className="animate-spin" />
-                                Please wait
-                              </>
-                            ): <span className="px-4">Claim</span>
-                          }
-                        </Button>
-                      </TableCell>
-                </TableRow>
-              </TableBody>
-          </Table>
+          <div className="relative no-scrollbar h-[180px] overflow-y-auto">
+            <Table>
+                <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
+                  <TableRow>
+                    <TableHead className="pl-4 text-left">PAIR</TableHead>
+                    <TableHead>BASE ASSET AMOUNT</TableHead>
+                    <TableHead>QUOTE ASSET AMOUNT</TableHead>
+                    <TableHead className="pr-4 text-right">ACTION</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
+                  <TableRow>
+                    <TableCell>{pool.pool_name}</TableCell>
+                    <TableCell>{balanceManagerAccount?.settled_balances.base}</TableCell>
+                    <TableCell>{balanceManagerAccount?.settled_balances.quote}</TableCell>
+                    <TableCell>
+                          <Button variant="outline" className="text-xs" disabled={loadingClaimSettledBalances.has(pool.pool_name)} onClick={() => handleClaimSettledFunds(pool.pool_name)}>
+                            { loadingClaimSettledBalances.has(pool.pool_name) ? 
+                              (
+                                <>
+                                  <Loader2 className="animate-spin" />
+                                  Please wait
+                                </>
+                              ): <span className="px-4">Claim</span>
+                            }
+                          </Button>
+                        </TableCell>
+                  </TableRow>
+                </TableBody>
+            </Table>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
