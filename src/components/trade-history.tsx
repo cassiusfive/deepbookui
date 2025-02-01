@@ -11,9 +11,8 @@ function formatTime(date: Date): string {
 
 export default function TradeHistory() {
   const pool = useCurrentPool();
-  const { data: trades, isLoading } = useTrades(pool.pool_name, 50);
+  const { data: trades } = useTrades(pool.pool_name, 50);
 
-  if (isLoading) return <div>loading</div>
   if (!trades) return <div>failed to fetch trade history</div>
 
   return (
