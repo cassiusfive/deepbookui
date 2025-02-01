@@ -31,7 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-import { Settings, Sun, Moon } from "lucide-react";
+import { Settings, Sun, Moon, Copy } from "lucide-react";
 import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
 import notFound from "@/assets/not-found.png";
@@ -112,7 +112,7 @@ function ImportBalanceManagerForm() {
             </FormItem>
           )}
         />
-        <Button disabled={!account} type="submit" variant="outline">Submit</Button>
+        <Button disabled={!account} type="submit" variant="outline">Import</Button>
       </form>
     </Form>
   )
@@ -142,6 +142,8 @@ export default function Navbar() {
     else if (pair?.quote_currency.includes("USDC")) quoteAssetImg = usdcImg;
     else quoteAssetImg = notFound;
   }
+
+  const balanceManagerAddress = localStorage.getItem(BALANCE_MANAGER_KEY) 
 
   if (isSummaryLoading || isPriceLoading) {
     return <div className="border-b"></div>;
@@ -252,6 +254,13 @@ export default function Navbar() {
               <div>
                 <h2 className="pb-2">Import balance manager</h2>
                 <ImportBalanceManagerForm />
+                <h2 className="pt-4 pb-2">Export balance manager</h2>
+                <div className="flex gap-2">
+                  <Input className="truncate" disabled={true} value={balanceManagerAddress || "No balance manager"}/>
+                  <Button disabled={!balanceManagerAddress} variant="outline" size="icon" onClick={() => {navigator.clipboard.writeText(balanceManagerAddress!)}}>
+                    <Copy />
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>
