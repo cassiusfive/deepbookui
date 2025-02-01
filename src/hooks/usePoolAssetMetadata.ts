@@ -14,7 +14,6 @@ export function usePoolAssetMetadata(baseCoinType: string, quoteCoinType: string
     enabled: !!dbClient,
   });
 
-  // Query for quote asset metadata
   const quoteAssetQuery = useQuery({
     queryKey: ["coinMetadata", quoteCoinType],
     queryFn: async () => {
