@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useCurrentAccount, useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -360,8 +360,8 @@ export default function Trade() {
   const dbClient = useDeepBook();
   const account = useCurrentAccount();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-  const { data: baseAssetManagerBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_name);
-  const { data: quoteAssetManagerBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_name);
+  const { data: baseAssetManagerBalance, refetch: refetchBaseBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_symbol);
+  const { data: quoteAssetManagerBalance, refetch: refetchQuoteBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_symbol);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({ 
     // @ts-expect-error
     execute: async ({ bytes, signature }) => await dbClient?.client.executeTransactionBlock({
@@ -369,6 +369,7 @@ export default function Trade() {
       signature,
       options: {
         showRawEffects: true,
+        showEffects: true,
         showObjectChanges: true,
       },
     }),
@@ -418,19 +419,34 @@ export default function Trade() {
   const handleDeposit = () => {
     const tx = new Transaction()
 
-    dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.base_asset_symbol, 1)(tx)
+    dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.base_asset_symbol, 0)(tx)
     dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.quote_asset_symbol, 1)(tx)
 
     signAndExecuteTransaction({
       transaction: tx
     }, {
-      onSuccess: result => {
+      onSuccess: async result => {
         console.log("deposited funds", result);
+
+        if (result.effects.status.status !== "success")  {
+          console.error("tx failed", result)
+          return toast({
+            title: "❌ Failed to deposit funds",
+            description: result.effects.status.error,
+            duration: 3000
+          });
+        }
+
+        // wait for tx to settle
+        await new Promise(resolve => setTimeout(resolve, 200));
+        refetchBaseBalance();
+        refetchQuoteBalance();
+
         toast({
           title: "✅ Deposited funds",
-          description: result.signature,
+          description: result.digest,
           duration: 3000
-        })
+        });
       },
       onError: error => {
         console.error("error depositing funds", error)
@@ -438,37 +454,43 @@ export default function Trade() {
           title: "❌ Failed to deposit funds",
           description: error.message,
           duration: 3000
-        })
-      },
+        });
+      }
     })
   }
 
   const handleWithdraw = () => {
     const tx = new Transaction()
 
-    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.base_asset_symbol, account!.address)(tx)
-    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.quote_asset_symbol, account!.address)(tx)
+    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.base_asset_symbol, account!.address)(tx);
+    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.quote_asset_symbol, account!.address)(tx);
 
     signAndExecuteTransaction({
       transaction: tx
     }, {
-      onSuccess: result => {
+      onSuccess: async result => {
         console.log("withdrew funds", result);
+
+        // wait for tx to settle
+        await new Promise(resolve => setTimeout(resolve, 200));
+        refetchBaseBalance();
+        refetchQuoteBalance();
+
         toast({
           title: "✅ Withdrew funds",
-          description: result.signature,
+          description: result.digest,
           duration: 3000
-        })
+        });
       },
       onError: error => {
-        console.error("error withdrawing funds", error)
+        console.error("error withdrawing funds", error);
         toast({
           title: "❌ Failed to withdraw funds",
           description: error.message,
           duration: 3000
-        })
+        });
       }
-    })
+    });
   }
 
   return (
