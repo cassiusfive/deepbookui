@@ -11,7 +11,7 @@ import { useDeepBook } from "@/contexts/deepbook";
 import { useMidPrice } from "@/hooks/useMidPrice";
 import { useSummary } from "@/hooks/useSummary";
 import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 
 import { BALANCE_MANAGER_KEY, mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
 
@@ -165,12 +165,12 @@ export default function Navbar() {
                 <img
                   src={baseAssetImg}
                   alt={`${pool.base_asset_symbol} symbol`}
-                  className="z-10 w-6"
+                  className="z-10 w-6 rounded-full"
                 />
                 <img
                   src={quoteAssetImg}
                   alt={`${pool.quote_asset_symbol} symbol`}
-                  className="ml-[-8px] w-6"
+                  className="ml-[-8px] w-6 rounded-full"
                 />
               </div>
               <div className="whitespace-nowrap">{`${baseAssetMetadata?.symbol}-${quoteAssetMetadata?.symbol}`}</div>
@@ -186,9 +186,7 @@ export default function Navbar() {
 
         <div className="flex gap-8">
           <div className="flex flex-col shrink-0">
-            <div className="text-sm text-muted-foreground">
-              LAST PRICE (24H)
-            </div>
+            <div className="text-sm text-muted-foreground text-nowrap">LAST PRICE (24H)</div>
             <div className="">
               ${price}{" "}
               <span className="text-red-500">
@@ -197,17 +195,17 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground">24H VOLUME</div>
+            <div className="text-sm text-muted-foreground text-nowrap">24H VOLUME</div>
             <div className="">
               ${(pair.base_volume + pair.quote_volume).toFixed(0)}
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground">24H HIGH</div>
+            <div className="text-sm text-muted-foreground text-nowrap">24H HIGH</div>
             <div className="">${pair.highest_price_24h.toFixed(4)}</div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground">24H LOW</div>
+            <div className="text-sm text-muted-foreground text-nowrap">24H LOW</div>
             <div className="">${pair.lowest_price_24h.toFixed(4)}</div>
           </div>
         </div>

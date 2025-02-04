@@ -1,5 +1,5 @@
 import { useCurrentPool } from "@/contexts/pool";
-import { useTrades } from "@/hooks/useTrades";
+import { useOrderHistory } from "@/hooks/useOrderHistory";
 
 function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0");
@@ -11,8 +11,9 @@ function formatTime(date: Date): string {
 
 export default function TradeHistory() {
   const pool = useCurrentPool();
-  const { data: trades } = useTrades(pool.pool_name, 50);
+  const { data: trades, isLoading } = useOrderHistory(pool.pool_name, 50);
 
+  if (isLoading) return
   if (!trades) return <div>failed to fetch trade history</div>
 
   return (

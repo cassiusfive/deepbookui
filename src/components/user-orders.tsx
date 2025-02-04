@@ -1,10 +1,10 @@
 import { useState } from "react"
 import { Transaction } from "@mysten/sui/transactions";
-import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useOpenOrders } from "@/hooks/useOpenOrders";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 import { useBalanceManagerAccount } from "@/hooks/useBalanceManagerAccount";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { BookX, Loader2 } from "lucide-react";
+import { useUserOrderHistory } from "@/hooks/useOrderHistory";
 
 function formatTime(date: Date): string {
   const hours = date.getHours().toString().padStart(2, "0");
@@ -36,11 +37,14 @@ export default function OpenOrders() {
   const { toast } = useToast()
   const dbClient = useDeepBook();
   const pool = useCurrentPool()
+  const account = useCurrentAccount()
   const { data: openOrders } = useOpenOrders(pool.pool_name, BALANCE_MANAGER_KEY)
   const { data: balanceManagerAccount } = useBalanceManagerAccount(pool.pool_name, BALANCE_MANAGER_KEY)
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set())
   const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] = useState<Set<string>>(new Set())
+
+  const { data: orderHistory } = useUserOrderHistory(account?.address)
 
   if (!dbClient) return
 
@@ -116,8 +120,6 @@ export default function OpenOrders() {
         });
       }
     })
-
-   
   }
 
   return (
@@ -130,7 +132,7 @@ export default function OpenOrders() {
         </TabsList>
         <div className="mx-4 border-b"></div>
         <TabsContent value="open-orders" className="mt-0">
-          <div className="relative no-scrollbar h-[180px] overflow-y-auto">
+          <div className="relative no-scrollbar h-[180px] overflow-y-auto [&>div]:static">
             <Table>
               <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
                 <TableRow>
@@ -150,7 +152,7 @@ export default function OpenOrders() {
                     <BookX />
                     <div>No orders</div>
                   </div>
-                ): openOrders.map((order) => {
+                ): openOrders.map(order => {
                   console.log(order)
                   return (
                     <TableRow>
@@ -187,14 +189,33 @@ export default function OpenOrders() {
               <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
                   <TableRow>
                     <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
-                    <TableHead>PAIR</TableHead>
-                    <TableHead>TYPE</TableHead>
-                    <TableHead>SIDE</TableHead>
-                    <TableHead>PRICE</TableHead>
-                    <TableHead>AMOUNT</TableHead>
-                    <TableHead className="pr-4 text-right">TOTAL</TableHead>
+                    <TableHead>DIGEST</TableHead>
+                    <TableHead className="pr-4 text-right"></TableHead>
                   </TableRow>
               </TableHeader>
+              <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
+                {!orderHistory || orderHistory.length === 0 ? (
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-2 items-center justify-center text-xs text-muted-foreground">
+                    <BookX />
+                    <div>No orders</div>
+                  </div>
+                ): (
+                  orderHistory.map(order => {
+                    console.log(order)
+                    return (
+                      <TableRow>
+                        <TableCell>{new Date(order.timestamp).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <a href={`https://suiscan.xyz/mainnet/tx/${order.transactionBlock.digest}`} target="_blank">
+                            {order.transactionBlock.digest}
+                          </a>
+                        </TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
             </Table>
           </div>
         </TabsContent>
