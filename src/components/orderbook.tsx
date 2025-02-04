@@ -1,14 +1,12 @@
-// https://docs.sui.io/standards/deepbookv3-sdk/pools#getlevel2ticksfrommid
-
+import { useState, useRef, useEffect } from "react";
+import { useCurrentPool } from "@/contexts/pool";
+import { useTheme } from "@/contexts/theme";
 import { useOrderbook, OrderbookEntry } from "@/hooks/useOrderbook";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState } from "react";
-import { useCurrentPool } from "@/contexts/pool";
-import { useTheme } from "@/contexts/theme";
 
 type OrderbookEntriesProps = {
   entries: OrderbookEntry[];
@@ -21,10 +19,7 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const textColor = type === "ask" ? "text-[#ef5350]" : "text-[#26a69a]";
-  const bgColor =
-    type === "ask" ? "rgba(239, 83, 80, 0.3)" : "rgba(38, 166, 154, 0.3)";
-  // it might be nice to create custom utility class for these colors
-  // these are the ones from trading view lightweight chart docs
+  const bgColor = type === "ask" ? "rgba(239, 83, 80, 0.3)" : "rgba(38, 166, 154, 0.3)";
 
   const aggregateData: {
     amount: number;
@@ -99,6 +94,18 @@ function OrderbookEntries({ entries, type }: OrderbookEntriesProps) {
 export default function OrderBook() {
   const pool = useCurrentPool();
   const { data, isLoading } = useOrderbook();
+  const spreadRowRef = useRef<HTMLTableRowElement>(null);
+  const hasScrolled = useRef(false);
+
+  // scroll to center
+  useEffect(() => {
+    if (!data || hasScrolled.current) return
+    spreadRowRef.current?.scrollIntoView({ 
+      block: "center",
+      behavior: "instant"
+    });
+    hasScrolled.current = true
+  }, [data]);
 
   if (isLoading) return <div></div>;
   if (!data) return <div>Error</div>;
@@ -113,14 +120,13 @@ export default function OrderBook() {
       </thead>
       <tbody>
         <OrderbookEntries entries={data!.asks} type="ask" />
-        <tr className="border-y">
+        <tr className="border-y" ref={spreadRowRef}>
           <td
             colSpan={2}
-            className="text-small w-full items-center justify-center py-1 text-center"
+            className="text-small w-full items-center justify-center py-1 text-right pr-3"
           >
             <span className="text-muted-foreground">SPREAD</span>
-            <span className="mx-6">{data!.spreadAmount.toFixed(5)}</span>
-            <span>{data!.spreadPercent.toFixed(4)}%</span>
+            <span className="text-right pl-12">{data!.spreadAmount.toFixed(5)}</span>
           </td>
         </tr>
         <OrderbookEntries entries={data!.bids} type="bid" />
