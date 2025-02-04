@@ -12,10 +12,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/deepbook": {
+      "/indexer": {
         target: "https://deepbook-indexer.mainnet.mystenlabs.com",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/deepbook/, ""),
+        rewrite: (path) => path.replace(/^\/indexer/, ""),
       },
     },
   },
