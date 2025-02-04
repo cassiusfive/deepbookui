@@ -28,7 +28,7 @@ import {
 } from "@/hooks/useBalances";
 import { Transaction } from "@mysten/sui/transactions";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";

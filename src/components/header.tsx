@@ -11,7 +11,7 @@ import { useDeepBook } from "@/contexts/deepbook";
 import { useMidPrice } from "@/hooks/useMidPrice";
 import { useSummary } from "@/hooks/useSummary";
 import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 
 import { BALANCE_MANAGER_KEY, mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
 

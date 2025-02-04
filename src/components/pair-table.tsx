@@ -19,6 +19,8 @@ export default function PairTable() {
   ])
 
   if (!poolAssetMetadata) return
+  console.log(poolAssetMetadata)
+  console.log(summaryData)
 
   const [inputValue, setInputValue] = useState<string>("");
   const input = inputValue.toLowerCase().trim();

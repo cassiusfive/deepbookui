@@ -4,7 +4,7 @@ import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-ki
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useOpenOrders } from "@/hooks/useOpenOrders";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/useToast";
 import { useBalanceManagerAccount } from "@/hooks/useBalanceManagerAccount";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 import {
