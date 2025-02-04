@@ -15,6 +15,7 @@ export interface Pool {
 
 export type CoinMap = Record<string, Coin>;
 export type PoolMap = Record<string, Pool>;
+
 export interface DeepbookPackageIds {
   DEEPBOOK_PACKAGE_ID: string;
   REGISTRY_ID: string;
