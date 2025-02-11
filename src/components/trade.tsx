@@ -4,7 +4,10 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,11 +42,11 @@ type FormProps = {
 };
 
 function OrderForm({ positionType, orderExecutionType }: FormProps) {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const account = useCurrentAccount();
   const dbClient = useDeepBook();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  if (!dbClient || !account) return
+  if (!dbClient || !account) return;
 
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
 
@@ -110,8 +113,11 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
 
-  function onSubmit(values: z.infer<typeof formSchema>, type: OrderExecutionType) {
-    const tx = new Transaction()
+  function onSubmit(
+    values: z.infer<typeof formSchema>,
+    type: OrderExecutionType,
+  ) {
+    const tx = new Transaction();
 
     if (type === "limit") {
       dbClient?.deepBook.placeLimitOrder({
@@ -120,37 +126,40 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
         clientOrderId: Date.now().toString(), // client side order number
         price: values.limitPrice,
         quantity: values.amount,
-        isBid: positionType === "buy"
-      })(tx)
+        isBid: positionType === "buy",
+      })(tx);
     } else {
       dbClient?.deepBook.placeMarketOrder({
         poolKey: pool.pool_name,
         balanceManagerKey: BALANCE_MANAGER_KEY,
         clientOrderId: Date.now().toString(), // client side order number
         quantity: values.amount,
-        isBid: positionType === "buy"
-      })(tx)
+        isBid: positionType === "buy",
+      })(tx);
     }
 
-    signAndExecuteTransaction({
-      transaction: tx
-    }, {
-      onSuccess: result => {
-        console.log(`placed ${type} order`, result);
-        toast({
-          title: `✅ Placed ${type} order`,
-          duration: 3000
-        })
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
       },
-      onError: error => {
-        console.error(`error placing ${type} order`, error)
-        toast({
-          title: `❌ Failed to place ${type} order`,
-          description: error.message,
-          duration: 3000
-        })
-      }
-    })
+      {
+        onSuccess: (result) => {
+          console.log(`placed ${type} order`, result);
+          toast({
+            title: `✅ Placed ${type} order`,
+            duration: 3000,
+          });
+        },
+        onError: (error) => {
+          console.error(`error placing ${type} order`, error);
+          toast({
+            title: `❌ Failed to place ${type} order`,
+            description: error.message,
+            duration: 3000,
+          });
+        },
+      },
+    );
   }
 
   const updateLimitPrice = useCallback(
@@ -191,13 +200,15 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
     [pool, limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
   );
 
-  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY)
+  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY);
 
   return (
     <div>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(data => onSubmit(data, orderExecutionType))}
+          onSubmit={form.handleSubmit((data) =>
+            onSubmit(data, orderExecutionType),
+          )}
           id="order"
           className="flex flex-col gap-3 space-y-8 px-3 py-3"
         >
@@ -355,143 +366,173 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
 }
 
 export default function Trade() {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const account = useCurrentAccount();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-  const { data: baseAssetManagerBalance, refetch: refetchBaseBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_symbol);
-  const { data: quoteAssetManagerBalance, refetch: refetchQuoteBalance } = useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_symbol);
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({ 
+  const { data: baseAssetManagerBalance, refetch: refetchBaseBalance } =
+    useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_symbol);
+  const { data: quoteAssetManagerBalance, refetch: refetchQuoteBalance } =
+    useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_symbol);
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     // @ts-expect-error
-    execute: async ({ bytes, signature }) => await dbClient?.client.executeTransactionBlock({
-      transactionBlock: bytes,
-      signature,
-      options: {
-        showRawEffects: true,
-        showEffects: true,
-        showObjectChanges: true,
-      },
-    }),
+    execute: async ({ bytes, signature }) =>
+      await dbClient?.client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          showRawEffects: true,
+          showEffects: true,
+          showObjectChanges: true,
+        },
+      }),
   });
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
 
-  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY)
+  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY);
 
   const handleCreateBalanceManager = () => {
-    const tx = new Transaction()
-    dbClient?.balanceManager.createAndShareBalanceManager()(tx)
+    const tx = new Transaction();
+    dbClient?.balanceManager.createAndShareBalanceManager()(tx);
 
-    signAndExecuteTransaction({
-      transaction: tx
-    }, {
-      onSuccess: result => {
-        console.log("created balance manager", result);
-        
-        // @ts-expect-error https://docs.sui.io/standards/deepbookv3-sdk
-        const managerAddress: string = result.objectChanges?.find((change) => {
-          return (
-            change.type === "created" &&
-            change.objectType.includes("BalanceManager")
-          );
-        })?.["objectId"];
-        localStorage.setItem(BALANCE_MANAGER_KEY, managerAddress)
-
-        toast({
-          title: "✅ Created balance manager",
-          description: managerAddress,
-          duration: 3000
-        })
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
       },
-      onError: error => {
-        console.error("error depositing funds", error)
-        toast({
-          title: "❌ Failed to create Balance Manager",
-          description: error.message,
-          duration: 3000
-        })
-      }
-    })
-  }
+      {
+        onSuccess: (result) => {
+          console.log("created balance manager", result);
+
+          // @ts-expect-error https://docs.sui.io/standards/deepbookv3-sdk
+          const managerAddress: string = result.objectChanges?.find(
+            (change) => {
+              return (
+                change.type === "created" &&
+                change.objectType.includes("BalanceManager")
+              );
+            },
+          )?.["objectId"];
+          localStorage.setItem(BALANCE_MANAGER_KEY, managerAddress);
+
+          toast({
+            title: "✅ Created balance manager",
+            description: managerAddress,
+            duration: 3000,
+          });
+        },
+        onError: (error) => {
+          console.error("error depositing funds", error);
+          toast({
+            title: "❌ Failed to create Balance Manager",
+            description: error.message,
+            duration: 3000,
+          });
+        },
+      },
+    );
+  };
 
   const handleDeposit = () => {
-    const tx = new Transaction()
+    const tx = new Transaction();
 
-    dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.base_asset_symbol, 0)(tx)
-    dbClient?.balanceManager.depositIntoManager("MANAGER_1", pool.quote_asset_symbol, 1)(tx)
+    dbClient?.balanceManager.depositIntoManager(
+      "MANAGER_1",
+      pool.base_asset_symbol,
+      0,
+    )(tx);
+    dbClient?.balanceManager.depositIntoManager(
+      "MANAGER_1",
+      pool.quote_asset_symbol,
+      1,
+    )(tx);
 
-    signAndExecuteTransaction({
-      transaction: tx
-    }, {
-      onSuccess: async result => {
-        console.log("deposited funds", result);
-
-        if (result.effects.status.status !== "success")  {
-          console.error("tx failed", result)
-          return toast({
-            title: "❌ Failed to deposit funds",
-            description: result.effects.status.error,
-            duration: 3000
-          });
-        }
-
-        // wait for tx to settle
-        await new Promise(resolve => setTimeout(resolve, 200));
-        refetchBaseBalance();
-        refetchQuoteBalance();
-
-        toast({
-          title: "✅ Deposited funds",
-          description: result.digest,
-          duration: 3000
-        });
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
       },
-      onError: error => {
-        console.error("error depositing funds", error)
-        toast({
-          title: "❌ Failed to deposit funds",
-          description: error.message,
-          duration: 3000
-        });
-      }
-    })
-  }
+      {
+        onSuccess: async (result) => {
+          console.log("deposited funds", result);
+
+          if (result.effects.status.status !== "success") {
+            console.error("tx failed", result);
+            return toast({
+              title: "❌ Failed to deposit funds",
+              description: result.effects.status.error,
+              duration: 3000,
+            });
+          }
+
+          // wait for tx to settle
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          refetchBaseBalance();
+          refetchQuoteBalance();
+
+          toast({
+            title: "✅ Deposited funds",
+            description: result.digest,
+            duration: 3000,
+          });
+        },
+        onError: (error) => {
+          console.error("error depositing funds", error);
+          toast({
+            title: "❌ Failed to deposit funds",
+            description: error.message,
+            duration: 3000,
+          });
+        },
+      },
+    );
+  };
 
   const handleWithdraw = () => {
-    const tx = new Transaction()
+    const tx = new Transaction();
 
-    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.base_asset_symbol, account!.address)(tx);
-    dbClient?.balanceManager.withdrawAllFromManager("MANAGER_1", pool.quote_asset_symbol, account!.address)(tx);
+    dbClient?.balanceManager.withdrawAllFromManager(
+      "MANAGER_1",
+      pool.base_asset_symbol,
+      account!.address,
+    )(tx);
+    dbClient?.balanceManager.withdrawAllFromManager(
+      "MANAGER_1",
+      pool.quote_asset_symbol,
+      account!.address,
+    )(tx);
 
-    signAndExecuteTransaction({
-      transaction: tx
-    }, {
-      onSuccess: async result => {
-        console.log("withdrew funds", result);
-
-        // wait for tx to settle
-        await new Promise(resolve => setTimeout(resolve, 200));
-        refetchBaseBalance();
-        refetchQuoteBalance();
-
-        toast({
-          title: "✅ Withdrew funds",
-          description: result.digest,
-          duration: 3000
-        });
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
       },
-      onError: error => {
-        console.error("error withdrawing funds", error);
-        toast({
-          title: "❌ Failed to withdraw funds",
-          description: error.message,
-          duration: 3000
-        });
-      }
-    });
-  }
+      {
+        onSuccess: async (result) => {
+          console.log("withdrew funds", result);
+
+          // wait for tx to settle
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          refetchBaseBalance();
+          refetchQuoteBalance();
+
+          toast({
+            title: "✅ Withdrew funds",
+            description: result.digest,
+            duration: 3000,
+          });
+        },
+        onError: (error) => {
+          console.error("error withdrawing funds", error);
+          toast({
+            title: "❌ Failed to withdraw funds",
+            description: error.message,
+            duration: 3000,
+          });
+        },
+      },
+    );
+  };
 
   return (
     <div className="flex h-full w-full min-w-fit shrink-0 flex-col">
@@ -503,7 +544,7 @@ export default function Trade() {
             {pool.round.display(baseAssetBalance)}
           </div>
         </div>
-        <div className="flex justify-between text-sm pb-8">
+        <div className="flex justify-between pb-8 text-sm">
           <div>{pool.quote_asset_symbol}</div>
           <div className="text-right">
             {pool.round.display(quoteAssetBalance)}
@@ -512,7 +553,13 @@ export default function Trade() {
         {!account ? (
           <div>Connect your wallet</div>
         ) : !balanceManager ? (
-          <Button variant="outline" className="w-full" onClick={handleCreateBalanceManager}>Create a balance manager</Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleCreateBalanceManager}
+          >
+            Create a balance manager
+          </Button>
         ) : (
           <>
             <h1 className="pb-2">Balance Manager Funds</h1>
@@ -529,10 +576,18 @@ export default function Trade() {
               </div>
             </div>
             <div className="flex w-full justify-center gap-4">
-              <Button className="mt-3 grow" variant="outline" onClick={handleDeposit}>
+              <Button
+                className="mt-3 grow"
+                variant="outline"
+                onClick={handleDeposit}
+              >
                 Deposit
               </Button>
-              <Button className="mt-3 grow" variant="outline" onClick={handleWithdraw}>
+              <Button
+                className="mt-3 grow"
+                variant="outline"
+                onClick={handleWithdraw}
+              >
                 Withdraw
               </Button>
             </div>
