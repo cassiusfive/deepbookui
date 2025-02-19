@@ -12,18 +12,15 @@ export default function PairTable() {
   const { data: pools } = usePools();
   const { data: summaryData } = useSummary();
 
-  if (!pools || !summaryData) return
-
   const poolAssetMetadata = pools!.flatMap((pool) => [
     usePoolAssetMetadata(pool.base_asset_id, pool.quote_asset_id)
   ])
 
-  if (!poolAssetMetadata) return
-  console.log(poolAssetMetadata)
-  console.log(summaryData)
-
   const [inputValue, setInputValue] = useState<string>("");
   const input = inputValue.toLowerCase().trim();
+
+  if (!pools || !summaryData) return
+  if (!poolAssetMetadata) return
 
   const formatter = new Intl.NumberFormat("en-US", {
     notation: "compact",

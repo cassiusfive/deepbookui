@@ -46,7 +46,7 @@ export default function OpenOrders() {
 
   const { data: orderHistory } = useUserOrderHistory(account?.address)
 
-  if (!dbClient) return
+  if (!dbClient) return;
 
   const handleCancelOrder = (orderId: string) => {
     setloadingCancelOrders(prev => new Set([...prev, orderId]));
@@ -153,7 +153,6 @@ export default function OpenOrders() {
                     <div>No orders</div>
                   </div>
                 ): openOrders.map(order => {
-                  console.log(order)
                   return (
                     <TableRow>
                       <TableCell>{formatTime(new Date(order.expire_timestamp))}</TableCell>
@@ -201,7 +200,6 @@ export default function OpenOrders() {
                   </div>
                 ): (
                   orderHistory.map(order => {
-                    console.log(order)
                     return (
                       <TableRow>
                         <TableCell>{new Date(order.timestamp).toLocaleString()}</TableCell>
@@ -232,21 +230,21 @@ export default function OpenOrders() {
                 </TableHeader>
                 <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
                   <TableRow>
-                    <TableCell>{pool.pool_name}</TableCell>
-                    <TableCell>{balanceManagerAccount?.settled_balances.base}</TableCell>
-                    <TableCell>{balanceManagerAccount?.settled_balances.quote}</TableCell>
-                    <TableCell>
-                          <Button variant="outline" className="text-xs" disabled={loadingClaimSettledBalances.has(pool.pool_name)} onClick={() => handleClaimSettledFunds(pool.pool_name)}>
-                            { loadingClaimSettledBalances.has(pool.pool_name) ? 
-                              (
-                                <>
-                                  <Loader2 className="animate-spin" />
-                                  Please wait
-                                </>
-                              ): <span className="px-4">Claim</span>
-                            }
-                          </Button>
-                        </TableCell>
+                      <TableCell>{pool.pool_name}</TableCell>
+                      <TableCell>{balanceManagerAccount?.settled_balances.base}</TableCell>
+                      <TableCell>{balanceManagerAccount?.settled_balances.quote}</TableCell>
+                      <TableCell>
+                            <Button variant="outline" className="text-xs" disabled={loadingClaimSettledBalances.has(pool.pool_name)} onClick={() => handleClaimSettledFunds(pool.pool_name)}>
+                              {loadingClaimSettledBalances.has(pool.pool_name) ? 
+                                (
+                                  <>
+                                    <Loader2 className="animate-spin" />
+                                    Please wait
+                                  </>
+                                ): <span className="px-4">Claim</span>
+                              }
+                            </Button>
+                      </TableCell>
                   </TableRow>
                 </TableBody>
             </Table>

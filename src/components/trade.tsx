@@ -46,7 +46,6 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const account = useCurrentAccount();
   const dbClient = useDeepBook();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  if (!dbClient || !account) return;
 
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
 
