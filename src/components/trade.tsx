@@ -405,9 +405,8 @@ export default function Trade() {
         onSuccess: (result) => {
           console.log("created balance manager", result);
 
-          // @ts-expect-error https://docs.sui.io/standards/deepbookv3-sdk
-          const managerAddress: string = result.objectChanges?.find(
-            (change) => {
+          // @ts-ignore https://docs.sui.io/standards/deepbookv3-sdk#balance-manager
+          const managerAddress: string = result.objectChanges?.find(change => {
               return (
                 change.type === "created" &&
                 change.objectType.includes("BalanceManager")
@@ -448,14 +447,9 @@ export default function Trade() {
       1,
     )(tx);
 
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-      },
+    signAndExecuteTransaction({ transaction: tx },
       {
         onSuccess: async (result) => {
-          console.log("deposited funds", result);
-
           if (result.effects.status.status !== "success") {
             console.error("tx failed", result);
             return toast({
