@@ -1,5 +1,5 @@
 import dbIndexerClient from "@/lib/indexer-client";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useInfiniteQuery, UseInfiniteQueryResult, InfiniteData } from "@tanstack/react-query";
 
 export type Trade = {
   trade_id: string;
@@ -14,11 +14,32 @@ export type Trade = {
   timestamp: number;
 };
 
-export function useOrderHistory(pool: string, limit: number = 1, taker: string | null = null, maker: string | null = null): UseQueryResult<Trade[], Error> {
-  const url = `/trades/${pool}?limit=${limit}${taker ? `&taker_balance_manager_id=${taker}` : ""}${maker ? `&maker_balance_manager_id=${maker}` : ""}`
-  return useQuery({
-    queryKey: ["trades", pool, limit, maker, taker],
-    queryFn: async () => await dbIndexerClient(url),
-    refetchInterval: 1000
-  });
+export function useOrderHistory(
+  poolKey: string, 
+  maker: string | null = null, 
+  taker: string | null = null, 
+  limit?: number
+): UseInfiniteQueryResult<InfiniteData<Trade[], number>, Error> {
+  return useInfiniteQuery({
+    queryKey: ["orderUpdates", poolKey, maker, taker, limit],
+    queryFn: async ({ pageParam }) => {
+      const searchParams = new URLSearchParams({
+        maker: "0xd335e8aa19d6dc04273d77e364c936bad69db4905a4ab3b2733d644dd2b31e0a",
+        limit: (limit || 50).toString(),
+        end_time: Math.floor(pageParam / 1000).toString()
+      })
+
+      console.log(`/trades/${poolKey}?${searchParams.toString()}`)
+      return await dbIndexerClient(`/trades/${poolKey}?${searchParams.toString()}`);
+    },
+    getNextPageParam: lastPage => {
+      if (!lastPage || lastPage.length === 0) return undefined
+      return lastPage[lastPage.length - 1].timestamp
+    },
+    getPreviousPageParam: firstPage => {
+      if (!firstPage || firstPage.length === 0) return undefined
+      return firstPage[0].timestamp
+    },
+    initialPageParam: Date.now(),
+  })
 }

@@ -31,12 +31,14 @@ import {
 } from "@/components/ui/pagination"
 import { Button } from "@/components/ui/button";
 import { BookX, Loader2 } from "lucide-react";
+import { useOrderHistory } from "@/hooks/useOrderHistory";
 
 export default function OpenOrders() {
   const { toast } = useToast();
   const dbClient = useDeepBook();
   const pool = useCurrentPool();
-  const { data: orders, fetchNextPage, fetchPreviousPage, isFetchingNextPage, isFetchingPreviousPage, hasNextPage, hasPreviousPage } = useOrders(pool.pool_name, localStorage.getItem(BALANCE_MANAGER_KEY)!);
+  const orders = useOrders(pool.pool_name, localStorage.getItem(BALANCE_MANAGER_KEY)!);
+  const orderHistory = useOrderHistory(pool.pool_name, localStorage.getItem(BALANCE_MANAGER_KEY)!);
   const { data: balanceManagerAccount } = useBalanceManagerAccount(pool.pool_name, BALANCE_MANAGER_KEY);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set());
@@ -44,12 +46,10 @@ export default function OpenOrders() {
 
   if (!dbClient) return;
 
-  const openOrders = orders?.pages.flatMap(page => 
+  const openOrders = orders.data?.pages.flatMap(page => 
     page.filter(order => order.status === "Placed" || order.status === "Modified")
   )
-  const closedOrders = orders?.pages.flatMap(page =>
-    page.filter(order => order.status === "Canceled" || order.status === "Expired")
-  )
+  const history = orderHistory.data?.pages.flatMap(page => page);
 
   const handleCancelOrder = (orderId: string) => {
     setloadingCancelOrders(prev => new Set([...prev, orderId]));
@@ -187,8 +187,8 @@ export default function OpenOrders() {
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious 
-                      onClick={() => fetchPreviousPage()}
-                      disabled={!hasPreviousPage || isFetchingPreviousPage}
+                      onClick={() => orders.fetchPreviousPage()}
+                      disabled={!orders.hasPreviousPage || orders.isFetchingPreviousPage}
                     />
                   </PaginationItem>
                   
@@ -200,8 +200,8 @@ export default function OpenOrders() {
                   
                   <PaginationItem>
                     <PaginationNext 
-                      onClick={() => fetchNextPage()}
-                      disabled={!hasNextPage || isFetchingNextPage}
+                      onClick={() => orders.fetchNextPage()}
+                      disabled={!orders.hasNextPage || orders.isFetchingNextPage}
                     />
                   </PaginationItem>
                 </PaginationContent>
@@ -219,27 +219,25 @@ export default function OpenOrders() {
                     <TableHead>PRICE</TableHead>
                     <TableHead>QUANTITY</TableHead>
                     <TableHead>TOTAL</TableHead>
-                    <TableHead>ID</TableHead>
-                    <TableHead className="pr-4 text-right">STATUS</TableHead>
+                    <TableHead className="pr-4 text-right">ID</TableHead>
                   </TableRow>
               </TableHeader>
               <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
-                {!closedOrders || closedOrders.length === 0 ? (
+                {!history || history.length === 0 ? (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-2 items-center justify-center text-xs text-muted-foreground">
                     <BookX />
                     <div>No orders</div>
                   </div>
                 ): (
-                  closedOrders.map(order => {
+                  history.map(order => {
                     return (
                       <TableRow>
                         <TableCell>{(new Date(order.timestamp)).toLocaleString()}</TableCell>
                         <TableCell>{order.type}</TableCell>
                         <TableCell>{order.price}</TableCell>
-                        <TableCell>{`${order.filled_quantity} / ${order.original_quantity}`}</TableCell>
-                        <TableCell>{order.filled_quantity * order.price}</TableCell>
-                        <TableCell>{order.order_id}</TableCell>
-                        <TableCell>{order.status}</TableCell>
+                        <TableCell>{order.quote_volume}</TableCell>
+                        <TableCell>{order.quote_volume * order.price}</TableCell>
+                        <TableCell>{order.trade_id}</TableCell>
                       </TableRow>
                     )
                   })
