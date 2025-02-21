@@ -62,5 +62,10 @@ export function DeepBookProvider({ children }: { children: ReactNode }) {
 }
 
 export function useDeepBook() {
-  return useContext(DeepBookContext);
+  const context = useContext(DeepBookContext);
+
+  if (context === undefined)
+    throw new Error("useTheme must be used within a ThemeProvider");
+
+  return context;
 }
