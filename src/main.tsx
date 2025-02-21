@@ -71,7 +71,7 @@ const networks = {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+    <ThemeProvider storageKey="vite-ui-theme">
       <NetworkProvider>
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networks}>
