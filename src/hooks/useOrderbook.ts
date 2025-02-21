@@ -15,10 +15,10 @@ type OrderbookInfo = {
 };
 
 async function fetchOrderbookInfo(
-  poolId: string,
+  poolKey: string,
   depth: number = 30,
 ): Promise<OrderbookInfo> {
-  const data = await dbIndexerClient(`/orderbook/${poolId}?depth=${depth}`);
+  const data = await dbIndexerClient(`/orderbook/${poolKey}?depth=${depth}`);
 
   const asks: OrderbookEntry[] = data.asks.map((ask: [string, string]) => ({
     price: parseFloat(ask[0]),

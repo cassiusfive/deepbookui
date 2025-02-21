@@ -586,6 +586,10 @@ export default function Trade() {
                 className="mt-3 grow"
                 variant="outline"
                 onClick={handleWithdraw}
+                disabled={
+                  baseAssetManagerBalance?.balance === 0 && 
+                  quoteAssetManagerBalance?.balance === 0
+                }
               >
                 Withdraw
               </Button>
