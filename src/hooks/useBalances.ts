@@ -12,11 +12,28 @@ export function useBalances() {
     queryKey: ["walletBalances", account?.address],
     queryFn: async () => {
       return await dbClient?.client.getAllBalances({
-        owner: account!.address
+        owner: account!.address,
       });
     },
     enabled: !!dbClient && !!account,
-    refetchInterval: 1000,
+  });
+}
+
+export function useBalance(assetType: string, scalar: number) {
+  const { data: balances } = useBalances();
+
+  return useQuery({
+    queryKey: ["walletBalance", assetType],
+    queryFn: () => {
+      const rawWalletBalance = balances!.find(
+        (coin) =>
+          normalizeStructTag(coin.coinType) === normalizeStructTag(assetType),
+      )?.totalBalance;
+      return rawWalletBalance !== undefined
+        ? parseInt(rawWalletBalance) / scalar
+        : 0;
+    },
+    enabled: balances !== undefined,
   });
 }
 
@@ -26,7 +43,7 @@ export function useManagerBalance(managerKey: string, coinKey: string) {
   return useQuery({
     queryKey: ["managerBalance", managerKey, coinKey],
     queryFn: () => dbClient?.checkManagerBalance(managerKey, coinKey),
-    enabled: !!dbClient
+    enabled: !!dbClient && coinKey.length > 0,
   });
 }
 

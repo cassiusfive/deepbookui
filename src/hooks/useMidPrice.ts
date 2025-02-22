@@ -10,6 +10,6 @@ export function useMidPrice(poolId: string) {
       return dbClient?.midPrice(poolId);
     },
     refetchInterval: 1000,
-    enabled: !!dbClient
+    enabled: !!dbClient,
   });
 }
