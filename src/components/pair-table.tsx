@@ -12,18 +12,15 @@ export default function PairTable() {
   const { data: pools } = usePools();
   const { data: summaryData } = useSummary();
 
-  if (!pools || !summaryData) return
-
   const poolAssetMetadata = pools!.flatMap((pool) => [
     usePoolAssetMetadata(pool.base_asset_id, pool.quote_asset_id)
   ])
 
-  if (!poolAssetMetadata) return
-  console.log(poolAssetMetadata)
-  console.log(summaryData)
-
   const [inputValue, setInputValue] = useState<string>("");
   const input = inputValue.toLowerCase().trim();
+
+  if (!pools || !summaryData) return
+  if (!poolAssetMetadata) return
 
   const formatter = new Intl.NumberFormat("en-US", {
     notation: "compact",
@@ -32,7 +29,11 @@ export default function PairTable() {
   });
 
   const filteredData = summaryData
-    .sort((a, b) => b.quote_volume - a.quote_volume)
+    .sort((a, b) => {
+      if (a.quote_volume === b.quote_volume) 
+        return a.base_currency.localeCompare(b.base_currency)
+      return b.quote_volume - a.quote_volume
+    })
     .filter(
       (pair) =>
         pair.quote_currency.toLowerCase().includes(input) ||
@@ -82,7 +83,7 @@ export default function PairTable() {
 
           return (
             <Link
-              className="flex w-full items-center p-2 hover:bg-gray-100"
+              className="flex w-full items-center p-2 bg-background hover:bg-secondary"
               to="/trade/$contractAddress"
               params={{ contractAddress: pool.pool_id }}
             >

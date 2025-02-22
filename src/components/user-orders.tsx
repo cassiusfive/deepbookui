@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { Transaction } from "@mysten/sui/transactions";
-import { useCurrentAccount, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useOpenOrders } from "@/hooks/useOpenOrders";
+import { useOrders } from "@/hooks/useUserOrders";
 import { useToast } from "@/hooks/useToast";
 import { useBalanceManagerAccount } from "@/hooks/useBalanceManagerAccount";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
@@ -21,32 +21,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import { Button } from "@/components/ui/button";
 import { BookX, Loader2 } from "lucide-react";
-import { useUserOrderHistory } from "@/hooks/useOrderHistory";
-
-function formatTime(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const seconds = date.getSeconds().toString().padStart(2, "0");
-
-  return `${hours}:${minutes}:${seconds}`;
-}
+import { useOrderHistory } from "@/hooks/useOrderHistory";
 
 export default function OpenOrders() {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const dbClient = useDeepBook();
-  const pool = useCurrentPool()
-  const account = useCurrentAccount()
-  const { data: openOrders } = useOpenOrders(pool.pool_name, BALANCE_MANAGER_KEY)
-  const { data: balanceManagerAccount } = useBalanceManagerAccount(pool.pool_name, BALANCE_MANAGER_KEY)
+  const pool = useCurrentPool();
+  const orders = useOrders(pool.pool_name, localStorage.getItem(BALANCE_MANAGER_KEY)!);
+  const orderHistory = useOrderHistory(pool.pool_name, localStorage.getItem(BALANCE_MANAGER_KEY)!);
+  const { data: balanceManagerAccount } = useBalanceManagerAccount(pool.pool_name, BALANCE_MANAGER_KEY);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set())
-  const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] = useState<Set<string>>(new Set())
+  const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set());
+  const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] = useState<Set<string>>(new Set());
 
-  const { data: orderHistory } = useUserOrderHistory(account?.address)
+  if (!dbClient) return;
 
-  if (!dbClient) return
+  const openOrders = orders.data?.pages.flatMap(page => 
+    page.filter(order => order.status === "Placed" || order.status === "Modified")
+  )
+  const history = orderHistory.data?.pages.flatMap(page => page);
 
   const handleCancelOrder = (orderId: string) => {
     setloadingCancelOrders(prev => new Set([...prev, orderId]));
@@ -125,8 +128,8 @@ export default function OpenOrders() {
   return (
     <div className="h-full">
       <Tabs defaultValue="open-orders">
-        <TabsList className="w-full justify-start rounded-none bg-background px-4 pt-8 pb-6 overflow-x-auto">
-          <TabsTrigger className="data-[state=active]:shadow-none" value="open-orders">Open Orders{!openOrders || openOrders.length === 0 ? "" : `(${openOrders.length})`}</TabsTrigger>
+        <TabsList className="w-full justify-start rounded-none bg-background px-4 py-6">
+          <TabsTrigger className="data-[state=active]:shadow-none" value="open-orders">Open Orders</TabsTrigger>
           <TabsTrigger className="data-[state=active]:shadow-none" value="trade-history">Trade History</TabsTrigger>
           <TabsTrigger className="data-[state=active]:shadow-none" value="settled-balance">Settled Balance</TabsTrigger>
         </TabsList>
@@ -137,13 +140,13 @@ export default function OpenOrders() {
               <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
                 <TableRow>
                   <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
-                  <TableHead>PAIR</TableHead>
                   <TableHead>TYPE</TableHead>
-                  <TableHead>SIDE</TableHead>
                   <TableHead>PRICE</TableHead>
-                  <TableHead>AMOUNT</TableHead>
+                  <TableHead>QUANTITY</TableHead>
                   <TableHead>TOTAL</TableHead>
-                  <TableHead className="pr-4 text-right">STATUS</TableHead>
+                  <TableHead>ID</TableHead>
+                  <TableHead>STATUS</TableHead>
+                  <TableHead className="pr-4 text-right"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
@@ -153,16 +156,14 @@ export default function OpenOrders() {
                     <div>No orders</div>
                   </div>
                 ): openOrders.map(order => {
-                  console.log(order)
                   return (
                     <TableRow>
-                      <TableCell>{formatTime(new Date(order.expire_timestamp))}</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell></TableCell>
-                      <TableCell>USDC</TableCell>
-                      <TableCell></TableCell>
-                      <TableCell>USDC</TableCell>
+                      <TableCell>{(new Date(order.timestamp)).toLocaleString()}</TableCell>
+                      <TableCell>{order.type}</TableCell>
+                      <TableCell>{order.price}</TableCell>
+                      <TableCell>{`${order.filled_quantity} / ${order.original_quantity}`}</TableCell>
+                      <TableCell>{order.filled_quantity * order.price}</TableCell>
+                      <TableCell>{order.order_id}</TableCell>
                       <TableCell>{order.status}</TableCell>
                       <TableCell>
                         <Button variant="outline" className="text-xs" disabled={loadingCancelOrders.has(order.order_id)} onClick={() => handleCancelOrder(order.order_id)}>
@@ -181,6 +182,31 @@ export default function OpenOrders() {
                 })}
               </TableBody>
             </Table>
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => orders.fetchPreviousPage()}
+                      disabled={!orders.hasPreviousPage || orders.isFetchingPreviousPage}
+                    />
+                  </PaginationItem>
+                  
+                  <PaginationItem>
+                    <PaginationLink>
+                      
+                    </PaginationLink>
+                  </PaginationItem>
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => orders.fetchNextPage()}
+                      disabled={!orders.hasNextPage || orders.isFetchingNextPage}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="trade-history" className="mt-0">
@@ -189,28 +215,29 @@ export default function OpenOrders() {
               <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
                   <TableRow>
                     <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
-                    <TableHead>DIGEST</TableHead>
-                    <TableHead className="pr-4 text-right"></TableHead>
+                    <TableHead>TYPE</TableHead>
+                    <TableHead>PRICE</TableHead>
+                    <TableHead>QUANTITY</TableHead>
+                    <TableHead>TOTAL</TableHead>
+                    <TableHead className="pr-4 text-right">ID</TableHead>
                   </TableRow>
               </TableHeader>
               <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
-                {!orderHistory || orderHistory.length === 0 ? (
+                {!history || history.length === 0 ? (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-2 items-center justify-center text-xs text-muted-foreground">
                     <BookX />
                     <div>No orders</div>
                   </div>
                 ): (
-                  orderHistory.map(order => {
-                    console.log(order)
+                  history.map(order => {
                     return (
                       <TableRow>
-                        <TableCell>{new Date(order.timestamp).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <a href={`https://suiscan.xyz/mainnet/tx/${order.transactionBlock.digest}`} target="_blank">
-                            {order.transactionBlock.digest}
-                          </a>
-                        </TableCell>
-                        <TableCell></TableCell>
+                        <TableCell>{(new Date(order.timestamp)).toLocaleString()}</TableCell>
+                        <TableCell>{order.type}</TableCell>
+                        <TableCell>{order.price}</TableCell>
+                        <TableCell>{order.quote_volume}</TableCell>
+                        <TableCell>{order.quote_volume * order.price}</TableCell>
+                        <TableCell>{order.trade_id}</TableCell>
                       </TableRow>
                     )
                   })
@@ -232,21 +259,21 @@ export default function OpenOrders() {
                 </TableHeader>
                 <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
                   <TableRow>
-                    <TableCell>{pool.pool_name}</TableCell>
-                    <TableCell>{balanceManagerAccount?.settled_balances.base}</TableCell>
-                    <TableCell>{balanceManagerAccount?.settled_balances.quote}</TableCell>
-                    <TableCell>
-                          <Button variant="outline" className="text-xs" disabled={loadingClaimSettledBalances.has(pool.pool_name)} onClick={() => handleClaimSettledFunds(pool.pool_name)}>
-                            { loadingClaimSettledBalances.has(pool.pool_name) ? 
-                              (
-                                <>
-                                  <Loader2 className="animate-spin" />
-                                  Please wait
-                                </>
-                              ): <span className="px-4">Claim</span>
-                            }
-                          </Button>
-                        </TableCell>
+                      <TableCell>{pool.pool_name}</TableCell>
+                      <TableCell>{balanceManagerAccount?.settled_balances.base}</TableCell>
+                      <TableCell>{balanceManagerAccount?.settled_balances.quote}</TableCell>
+                      <TableCell>
+                            <Button variant="outline" className="text-xs" disabled={loadingClaimSettledBalances.has(pool.pool_name)} onClick={() => handleClaimSettledFunds(pool.pool_name)}>
+                              {loadingClaimSettledBalances.has(pool.pool_name) ? 
+                                (
+                                  <>
+                                    <Loader2 className="animate-spin" />
+                                    Please wait
+                                  </>
+                                ): <span className="px-4">Claim</span>
+                              }
+                            </Button>
+                      </TableCell>
                   </TableRow>
                 </TableBody>
             </Table>

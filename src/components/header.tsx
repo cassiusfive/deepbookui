@@ -78,12 +78,12 @@ function ImportBalanceManagerForm() {
       mainnetPackageIds.DEEPBOOK_PACKAGE_ID}::balance_manager::BalanceManager`) 
     {
       toast({
-        title: "❌ Not a balance manager",
+        title: "❌ Balance manager does not exist",
         duration: 3000
       })
     } else if (res.data?.content?.fields.owner !== account?.address) {
       toast({
-        title: "❌ Not owned by you",
+        title: "❌ You don't own this balance manager",
         duration: 3000
       })
     } else {
@@ -100,7 +100,6 @@ function ImportBalanceManagerForm() {
     <Form {...form}>
       <form className="flex flex-row gap-2" onSubmit={form.handleSubmit(onSubmit)}>
         <FormField
-          disabled={!account}
           control={form.control}
           name="balanceManagerAddress"
           render={({ field }) => (
@@ -112,7 +111,7 @@ function ImportBalanceManagerForm() {
             </FormItem>
           )}
         />
-        <Button disabled={!account} type="submit" variant="outline">Import</Button>
+        <Button type="submit" variant="outline">Import</Button>
       </form>
     </Form>
   )
@@ -125,7 +124,7 @@ export default function Navbar() {
   const pool = useCurrentPool();
   const { data: summary, isLoading: isSummaryLoading } = useSummary();
   const { data: price, isLoading: isPriceLoading } = useMidPrice(pool.pool_name);
-
+  
   const pair = summary?.find((pair) => pair.trading_pairs == pool.pool_name);
 
   const { baseAssetMetadata, quoteAssetMetadata } = usePoolAssetMetadata(pool?.base_asset_id, pool?.quote_asset_id)

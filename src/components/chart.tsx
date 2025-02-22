@@ -57,7 +57,6 @@ export default function Chart() {
     });
 
     if (candles) {
-      console.log(candles);
       candlestickSeries.setData(candles);
     } else {
       candlestickSeries.setData([
