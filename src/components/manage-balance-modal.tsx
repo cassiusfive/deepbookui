@@ -194,20 +194,26 @@ export function ManageBalanceModal({
   return (
     <Dialog>
       <DialogTrigger
+        asChild
         onClick={() => {
           form.setValue("asset", pool.quote_asset_symbol);
           form.setValue("type", "deposit");
         }}
       >
-        Deposit
+        <Button className="mt-3 grow" variant="outline">
+          Deposit
+        </Button>
       </DialogTrigger>
       <DialogTrigger
+        asChild
         onClick={() => {
           form.setValue("asset", pool.base_asset_symbol);
           form.setValue("type", "withdraw");
         }}
       >
-        Withdraw
+        <Button className="mt-3 grow" variant="outline">
+          Withdraw
+        </Button>
       </DialogTrigger>
       <DialogContent className="w-100">
         <Tabs
