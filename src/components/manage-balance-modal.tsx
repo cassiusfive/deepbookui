@@ -38,13 +38,8 @@ import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { BALANCE_MANAGER_KEY, mainnetCoins } from "@/constants/deepbook";
 import { useCoinsMetadata } from "@/hooks/useCoinMetadata";
-import {
-  useBalance,
-  useBalances,
-  useManagerBalance,
-} from "@/hooks/useBalances";
+import { useBalance, useManagerBalance } from "@/hooks/useBalances";
 import { useCurrentPool } from "@/contexts/pool";
-import { normalizeStructTag } from "@mysten/sui/utils";
 import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
@@ -54,13 +49,7 @@ import { Transaction } from "@mysten/sui/transactions";
 
 type TransferType = "deposit" | "withdraw";
 
-type ManageBalanceModalProps = {
-  transferType: TransferType;
-};
-
-export function ManageBalanceModal({
-  transferType: defaultTransferType,
-}: ManageBalanceModalProps) {
+export function ManageBalanceModal() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook()!;
   const account = useCurrentAccount();
@@ -122,7 +111,7 @@ export function ManageBalanceModal({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
     defaultValues: {
-      type: defaultTransferType,
+      type: "deposit",
       asset: "DEEP",
       amount: 1.0,
     },

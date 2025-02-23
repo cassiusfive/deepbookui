@@ -8,7 +8,6 @@ import Trade from "@/components/trade";
 import MarketOverview from "@/components/market-overview";
 import User from "@/components/user-orders";
 import { Toaster } from "@/components/ui/toaster";
-import { ManageBalanceModal } from "./manage-balance-modal";
 
 const route = getRouteApi("/trade/$contractAddress");
 
@@ -63,7 +62,6 @@ export default function Terminal() {
               <MarketOverview />
             </div>
             <div className="col-start-3 col-end-3 row-start-1 row-end-3 border-l">
-              <ManageBalanceModal transferType="withdraw" />
               <Trade />
             </div>
             <div className="col-start-1 col-end-3 h-full border-t">

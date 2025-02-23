@@ -32,6 +32,7 @@ import {
 import { Transaction } from "@mysten/sui/transactions";
 import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 import { useToast } from "@/hooks/useToast";
+import { ManageBalanceModal } from "./manage-balance-modal";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -406,7 +407,8 @@ export default function Trade() {
           console.log("created balance manager", result);
 
           // @ts-ignore https://docs.sui.io/standards/deepbookv3-sdk#balance-manager
-          const managerAddress: string = result.objectChanges?.find(change => {
+          const managerAddress: string = result.objectChanges?.find(
+            (change) => {
               return (
                 change.type === "created" &&
                 change.objectType.includes("BalanceManager")
@@ -425,100 +427,6 @@ export default function Trade() {
           console.error("error depositing funds", error);
           toast({
             title: "❌ Failed to create Balance Manager",
-            description: error.message,
-            duration: 3000,
-          });
-        },
-      },
-    );
-  };
-
-  const handleDeposit = () => {
-    const tx = new Transaction();
-
-    dbClient?.balanceManager.depositIntoManager(
-      "MANAGER_1",
-      pool.base_asset_symbol,
-      0,
-    )(tx);
-    dbClient?.balanceManager.depositIntoManager(
-      "MANAGER_1",
-      pool.quote_asset_symbol,
-      1,
-    )(tx);
-
-    signAndExecuteTransaction({ transaction: tx },
-      {
-        onSuccess: async (result) => {
-          if (result.effects.status.status !== "success") {
-            console.error("tx failed", result);
-            return toast({
-              title: "❌ Failed to deposit funds",
-              description: result.effects.status.error,
-              duration: 3000,
-            });
-          }
-
-          // wait for tx to settle
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          refetchBaseBalance();
-          refetchQuoteBalance();
-
-          toast({
-            title: "✅ Deposited funds",
-            description: result.digest,
-            duration: 3000,
-          });
-        },
-        onError: (error) => {
-          console.error("error depositing funds", error);
-          toast({
-            title: "❌ Failed to deposit funds",
-            description: error.message,
-            duration: 3000,
-          });
-        },
-      },
-    );
-  };
-
-  const handleWithdraw = () => {
-    const tx = new Transaction();
-
-    dbClient?.balanceManager.withdrawAllFromManager(
-      "MANAGER_1",
-      pool.base_asset_symbol,
-      account!.address,
-    )(tx);
-    dbClient?.balanceManager.withdrawAllFromManager(
-      "MANAGER_1",
-      pool.quote_asset_symbol,
-      account!.address,
-    )(tx);
-
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-      },
-      {
-        onSuccess: async (result) => {
-          console.log("withdrew funds", result);
-
-          // wait for tx to settle
-          await new Promise((resolve) => setTimeout(resolve, 200));
-          refetchBaseBalance();
-          refetchQuoteBalance();
-
-          toast({
-            title: "✅ Withdrew funds",
-            description: result.digest,
-            duration: 3000,
-          });
-        },
-        onError: (error) => {
-          console.error("error withdrawing funds", error);
-          toast({
-            title: "❌ Failed to withdraw funds",
             description: error.message,
             duration: 3000,
           });
@@ -569,24 +477,7 @@ export default function Trade() {
               </div>
             </div>
             <div className="flex w-full justify-center gap-4">
-              <Button
-                className="mt-3 grow"
-                variant="outline"
-                onClick={handleDeposit}
-              >
-                Deposit
-              </Button>
-              <Button
-                className="mt-3 grow"
-                variant="outline"
-                onClick={handleWithdraw}
-                disabled={
-                  baseAssetManagerBalance?.balance === 0 && 
-                  quoteAssetManagerBalance?.balance === 0
-                }
-              >
-                Withdraw
-              </Button>
+              <ManageBalanceModal />
             </div>
           </>
         )}
