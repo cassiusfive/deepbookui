@@ -36,7 +36,7 @@ import {
 import { ScrollArea } from "./ui/scroll-area";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { BALANCE_MANAGER_KEY, mainnetCoins } from "@/constants/deepbook";
+import { mainnetCoins } from "@/constants/deepbook";
 import { useCoinsMetadata } from "@/hooks/useCoinMetadata";
 import { useBalance, useManagerBalance } from "@/hooks/useBalances";
 import { useCurrentPool } from "@/contexts/pool";
@@ -46,6 +46,7 @@ import {
 } from "@mysten/dapp-kit";
 import { useDeepBook } from "@/contexts/deepbook";
 import { Transaction } from "@mysten/sui/transactions";
+import { useCurrentManager } from "@/hooks/useCurrentManager";
 
 type TransferType = "deposit" | "withdraw";
 
@@ -54,6 +55,7 @@ export function ManageBalanceModal() {
   const dbClient = useDeepBook()!;
   const account = useCurrentAccount();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { balanceManagerKey } = useCurrentManager();
 
   const coinTypes = Object.values(mainnetCoins).map((coin) => coin.type);
   const coinMetadataQueries = useCoinsMetadata(coinTypes);
@@ -65,7 +67,7 @@ export function ManageBalanceModal() {
 
   const [selectedAsset, setSelectedAsset] = useState("DEEP");
   const { data: managerData } = useManagerBalance(
-    BALANCE_MANAGER_KEY,
+    balanceManagerKey,
     selectedAsset,
   );
   const managerBalance = managerData?.balance;
@@ -133,7 +135,7 @@ export function ManageBalanceModal() {
 
     tx.add(
       dbClient.balanceManager.depositIntoManager(
-        BALANCE_MANAGER_KEY,
+        balanceManagerKey,
         selectedAsset,
         amount,
       ),
@@ -156,7 +158,7 @@ export function ManageBalanceModal() {
 
     tx.add(
       dbClient.balanceManager.withdrawFromManager(
-        BALANCE_MANAGER_KEY,
+        managerKey,
         selectedAsset,
         amount,
         account!.address,

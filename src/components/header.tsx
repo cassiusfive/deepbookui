@@ -13,7 +13,7 @@ import { useSummary } from "@/hooks/useSummary";
 import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
 import { useToast } from "@/hooks/useToast";
 
-import { BALANCE_MANAGER_KEY, mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
+import { mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
 
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -27,7 +27,7 @@ import {
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -35,70 +35,78 @@ import { Settings, Sun, Moon, Copy } from "lucide-react";
 import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
 import notFound from "@/assets/not-found.png";
+import { useCurrentManager } from "@/hooks/useCurrentManager";
 
 const formSchema = z.object({
-  balanceManagerAddress: z.string()
+  balanceManagerAddress: z
+    .string()
     .min(1, "Manager address is required")
-    .regex(/^0x[a-fA-F0-9]{64}$/, "Invalid Sui address format")
-})
+    .regex(/^0x[a-fA-F0-9]{64}$/, "Invalid Sui address format"),
+});
 
 function ImportBalanceManagerForm() {
-  const { toast } = useToast()
-  const { network } = useNetwork()
-  const account = useCurrentAccount()
-  const dbClient = useDeepBook()
-  
+  const { toast } = useToast();
+  const { network } = useNetwork();
+  const account = useCurrentAccount();
+  const dbClient = useDeepBook();
+  const { setBalanceManager } = useCurrentManager();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       balanceManagerAddress: "",
     },
-  })
+  });
 
-  const onSubmit = async(values: z.infer<typeof formSchema>) => {
-    const res = await dbClient?.client.getObject({ 
-      id: values.balanceManagerAddress, 
-      options: { 
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const res = await dbClient?.client.getObject({
+      id: values.balanceManagerAddress,
+      options: {
         showType: true,
-        showContent: true
-      }
-    })
+        showContent: true,
+      },
+    });
 
     if (!res || res?.error) {
-      console.error(res?.error)
+      console.error(res?.error);
       toast({
         title: "❌ Failed to import balance manager",
         description: res?.error?.code || "unknown",
-        duration: 3000
-      })
-    } else if (res.data?.type !== 
-      `${network === "testnet" ? 
-      testnetPackageIds.DEEPBOOK_PACKAGE_ID : 
-      mainnetPackageIds.DEEPBOOK_PACKAGE_ID}::balance_manager::BalanceManager`) 
-    {
+        duration: 3000,
+      });
+    } else if (
+      res.data?.type !==
+      `${
+        network === "testnet"
+          ? testnetPackageIds.DEEPBOOK_PACKAGE_ID
+          : mainnetPackageIds.DEEPBOOK_PACKAGE_ID
+      }::balance_manager::BalanceManager`
+    ) {
       toast({
         title: "❌ Balance manager does not exist",
-        duration: 3000
-      })
+        duration: 3000,
+      });
     } else if (res.data?.content?.fields.owner !== account?.address) {
       toast({
         title: "❌ You don't own this balance manager",
-        duration: 3000
-      })
+        duration: 3000,
+      });
     } else {
-      localStorage.setItem(BALANCE_MANAGER_KEY, values.balanceManagerAddress)
+      setBalanceManager(values.balanceManagerAddress);
       toast({
         title: "✅ Imported balance manager",
         description: values.balanceManagerAddress,
-        duration: 3000
-      })
+        duration: 3000,
+      });
     }
-  }
+  };
 
   return (
     <Form {...form}>
-      <form className="flex flex-row gap-2" onSubmit={form.handleSubmit(onSubmit)}>
+      <form
+        className="flex flex-row gap-2"
+        onSubmit={form.handleSubmit(onSubmit)}
+      >
         <FormField
           control={form.control}
           name="balanceManagerAddress"
@@ -111,23 +119,31 @@ function ImportBalanceManagerForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" variant="outline">Import</Button>
+        <Button type="submit" variant="outline">
+          Import
+        </Button>
       </form>
     </Form>
-  )
+  );
 }
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
-  const { network, setNetwork } = useNetwork()
+  const { network, setNetwork } = useNetwork();
 
   const pool = useCurrentPool();
   const { data: summary, isLoading: isSummaryLoading } = useSummary();
-  const { data: price, isLoading: isPriceLoading } = useMidPrice(pool.pool_name);
-  
+  const { data: price, isLoading: isPriceLoading } = useMidPrice(
+    pool.pool_name,
+  );
+  const { balanceManagerAddress } = useCurrentManager();
+
   const pair = summary?.find((pair) => pair.trading_pairs == pool.pool_name);
 
-  const { baseAssetMetadata, quoteAssetMetadata } = usePoolAssetMetadata(pool?.base_asset_id, pool?.quote_asset_id)
+  const { baseAssetMetadata, quoteAssetMetadata } = usePoolAssetMetadata(
+    pool?.base_asset_id,
+    pool?.quote_asset_id,
+  );
 
   let baseAssetImg = baseAssetMetadata?.iconUrl;
   if (!baseAssetImg) {
@@ -141,8 +157,6 @@ export default function Navbar() {
     else if (pair?.quote_currency.includes("USDC")) quoteAssetImg = usdcImg;
     else quoteAssetImg = notFound;
   }
-
-  const balanceManagerAddress = localStorage.getItem(BALANCE_MANAGER_KEY) 
 
   if (isSummaryLoading || isPriceLoading) {
     return <div className="border-b"></div>;
@@ -184,8 +198,10 @@ export default function Navbar() {
         </Sheet>
 
         <div className="flex gap-8">
-          <div className="flex flex-col shrink-0">
-            <div className="text-sm text-muted-foreground text-nowrap">LAST PRICE (24H)</div>
+          <div className="flex shrink-0 flex-col">
+            <div className="text-nowrap text-sm text-muted-foreground">
+              LAST PRICE (24H)
+            </div>
             <div className="">
               ${price}{" "}
               <span className="text-red-500">
@@ -194,17 +210,23 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground text-nowrap">24H VOLUME</div>
+            <div className="text-nowrap text-sm text-muted-foreground">
+              24H VOLUME
+            </div>
             <div className="">
               ${(pair.base_volume + pair.quote_volume).toFixed(0)}
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground text-nowrap">24H HIGH</div>
+            <div className="text-nowrap text-sm text-muted-foreground">
+              24H HIGH
+            </div>
             <div className="">${pair.highest_price_24h.toFixed(4)}</div>
           </div>
           <div className="flex flex-col">
-            <div className="text-sm text-muted-foreground text-nowrap">24H LOW</div>
+            <div className="text-nowrap text-sm text-muted-foreground">
+              24H LOW
+            </div>
             <div className="">${pair.lowest_price_24h.toFixed(4)}</div>
           </div>
         </div>
@@ -234,9 +256,12 @@ export default function Navbar() {
               </div>
               <div className="border-b pb-6">
                 <h2 className="pb-2">Network</h2>
-                <RadioGroup defaultValue="testnet"
+                <RadioGroup
+                  defaultValue="testnet"
                   value={network}
-                  onValueChange={value => setNetwork(value as "mainnet" | "testnet")}
+                  onValueChange={(value) =>
+                    setNetwork(value as "mainnet" | "testnet")
+                  }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="mainnet" id="mainnet" />
@@ -251,10 +276,21 @@ export default function Navbar() {
               <div>
                 <h2 className="pb-2">Import balance manager</h2>
                 <ImportBalanceManagerForm />
-                <h2 className="pt-4 pb-2">Export balance manager</h2>
+                <h2 className="pb-2 pt-4">Export balance manager</h2>
                 <div className="flex gap-2">
-                  <Input className="truncate" disabled={true} value={balanceManagerAddress || "No balance manager"}/>
-                  <Button disabled={!balanceManagerAddress} variant="outline" size="icon" onClick={() => {navigator.clipboard.writeText(balanceManagerAddress!)}}>
+                  <Input
+                    className="truncate"
+                    disabled={true}
+                    value={balanceManagerAddress || "No balance manager"}
+                  />
+                  <Button
+                    disabled={!balanceManagerAddress}
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(balanceManagerAddress!);
+                    }}
+                  >
                     <Copy />
                   </Button>
                 </div>

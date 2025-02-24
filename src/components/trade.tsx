@@ -30,9 +30,9 @@ import {
   useManagerBalance,
 } from "@/hooks/useBalances";
 import { Transaction } from "@mysten/sui/transactions";
-import { BALANCE_MANAGER_KEY } from "@/constants/deepbook";
 import { useToast } from "@/hooks/useToast";
 import { ManageBalanceModal } from "./manage-balance-modal";
+import { useCurrentManager } from "@/hooks/useCurrentManager";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -44,7 +44,6 @@ type FormProps = {
 
 function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { toast } = useToast();
-  const account = useCurrentAccount();
   const dbClient = useDeepBook();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
@@ -112,6 +111,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const amount = form.watch("amount");
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
+  const { balanceManagerKey, balanceManagerAddress } = useCurrentManager();
 
   function onSubmit(
     values: z.infer<typeof formSchema>,
@@ -122,7 +122,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
     if (type === "limit") {
       dbClient?.deepBook.placeLimitOrder({
         poolKey: pool.pool_name,
-        balanceManagerKey: BALANCE_MANAGER_KEY,
+        balanceManagerKey: balanceManagerKey,
         clientOrderId: Date.now().toString(), // client side order number
         price: values.limitPrice,
         quantity: values.amount,
@@ -131,7 +131,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
     } else {
       dbClient?.deepBook.placeMarketOrder({
         poolKey: pool.pool_name,
-        balanceManagerKey: BALANCE_MANAGER_KEY,
+        balanceManagerKey: balanceManagerKey,
         clientOrderId: Date.now().toString(), // client side order number
         quantity: values.amount,
         isBid: positionType === "buy",
@@ -200,8 +200,6 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
     [pool, limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
   );
 
-  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY);
-
   return (
     <div>
       <Form {...form}>
@@ -214,7 +212,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
         >
           {orderExecutionType == "limit" && (
             <FormField
-              disabled={!balanceManager}
+              disabled={!balanceManagerAddress}
               control={form.control}
               name="limitPrice"
               render={({ field }) => (
@@ -243,7 +241,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                   </FormControl>
                   <div className="!mt-1 flex gap-1">
                     <Button
-                      disabled={!balanceManager}
+                      disabled={!balanceManagerAddress}
                       className="h-8 rounded-sm hover:border-gray-300"
                       variant="outline"
                       type="button"
@@ -252,7 +250,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                       MID
                     </Button>
                     <Button
-                      disabled={!balanceManager}
+                      disabled={!balanceManagerAddress}
                       className="h-8 rounded-sm hover:border-gray-300"
                       variant="outline"
                       type="button"
@@ -267,7 +265,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
             />
           )}
           <FormField
-            disabled={!balanceManager}
+            disabled={!balanceManagerAddress}
             control={form.control}
             name="amount"
             render={({ field }) => (
@@ -296,7 +294,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                 </FormControl>
                 <div className="!mt-1 flex gap-1">
                   <Button
-                    disabled={!balanceManager}
+                    disabled={!balanceManagerAddress}
                     className="h-8 w-1/3 rounded-sm hover:border-gray-300"
                     variant="outline"
                     type="button"
@@ -305,7 +303,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                     25%
                   </Button>
                   <Button
-                    disabled={!balanceManager}
+                    disabled={!balanceManagerAddress}
                     className="h-8 w-1/3 rounded-sm hover:border-gray-300"
                     variant="outline"
                     type="button"
@@ -314,7 +312,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
                     50%
                   </Button>
                   <Button
-                    disabled={!balanceManager}
+                    disabled={!balanceManagerAddress}
                     className="h-8 w-1/3 rounded-sm hover:border-gray-300"
                     variant="outline"
                     type="button"
@@ -352,7 +350,7 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
           type="submit"
           form="order"
           disabled={
-            !balanceManager ||
+            !balanceManagerAddress ||
             !form.formState.isValid ||
             !form.getValues("amount") ||
             (orderExecutionType === "limit" && !form.getValues("limitPrice"))
@@ -370,11 +368,16 @@ export default function Trade() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const account = useCurrentAccount();
+  const { balanceManagerKey, balanceManagerAddress, setBalanceManager } =
+    useCurrentManager();
+
+  console.log(balanceManagerKey);
+
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
   const { data: baseAssetManagerBalance, refetch: refetchBaseBalance } =
-    useManagerBalance(BALANCE_MANAGER_KEY, pool.base_asset_symbol);
+    useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
   const { data: quoteAssetManagerBalance, refetch: refetchQuoteBalance } =
-    useManagerBalance(BALANCE_MANAGER_KEY, pool.quote_asset_symbol);
+    useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     // @ts-expect-error
     execute: async ({ bytes, signature }) =>
@@ -391,8 +394,6 @@ export default function Trade() {
 
   const [positionType, setPositionType] = useState<PositionType>("buy");
   const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
-
-  const balanceManager = localStorage.getItem(BALANCE_MANAGER_KEY);
 
   const handleCreateBalanceManager = () => {
     const tx = new Transaction();
@@ -415,7 +416,7 @@ export default function Trade() {
               );
             },
           )?.["objectId"];
-          localStorage.setItem(BALANCE_MANAGER_KEY, managerAddress);
+          setBalanceManager(managerAddress);
 
           toast({
             title: "✅ Created balance manager",
@@ -453,7 +454,7 @@ export default function Trade() {
         </div>
         {!account ? (
           <div>Connect your wallet</div>
-        ) : !balanceManager ? (
+        ) : !balanceManagerAddress ? (
           <Button
             variant="outline"
             className="w-full"
