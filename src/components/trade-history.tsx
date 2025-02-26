@@ -1,19 +1,10 @@
 import { useCurrentPool } from "@/contexts/pool";
-import { useOrderHistory } from "@/hooks/useOrderHistory";
-
-function formatTime(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const seconds = date.getSeconds().toString().padStart(2, "0");
-
-  return `${hours}:${minutes}:${seconds}`;
-}
+import { useTradeHistory } from "@/hooks/useOrderHistory";
 
 export default function TradeHistory() {
   const pool = useCurrentPool();
-  const { data: trades, isLoading } = useOrderHistory(pool.pool_name, 50);
+  const { data: trades } = useTradeHistory(pool.pool_name);
 
-  if (isLoading) return
   if (!trades) return <div>failed to fetch trade history</div>
 
   return (
@@ -35,7 +26,7 @@ export default function TradeHistory() {
               {trade.quote_volume}
             </th>
             <th className="text-nowrap pr-3 text-muted-foreground">
-              {formatTime(new Date(trade.timestamp))}
+              {new Date(trade.timestamp).toLocaleTimeString([], { hour12: false })}
             </th>
           </tr>
         ))}

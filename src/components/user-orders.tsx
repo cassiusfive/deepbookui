@@ -35,16 +35,10 @@ export default function OpenOrders() {
   const { balanceManagerKey, balanceManagerAddress } = useCurrentManager();
   const orders = useOrders(pool.pool_name, balanceManagerAddress!);
   const orderHistory = useOrderHistory(pool.pool_name, balanceManagerAddress!);
-  const { data: balanceManagerAccount } = useBalanceManagerAccount(
-    pool.pool_name,
-    balanceManagerKey,
-  );
+  const { data: balanceManagerAccount } = useBalanceManagerAccount(pool.pool_name, balanceManagerKey,);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(
-    new Set(),
-  );
-  const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] =
-    useState<Set<string>>(new Set());
+  const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set(),);
+  const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] = useState<Set<string>>(new Set());
 
   if (!dbClient) return;
 

@@ -21,12 +21,11 @@ export function useOrders(poolKey: string, balanceManagerId: string, params?: {
     queryKey: ["orderUpdates", poolKey, balanceManagerId, params],
     queryFn: async ({ pageParam }) => {
       const searchParams = new URLSearchParams({
-        balance_manager_id: "0xd335e8aa19d6dc04273d77e364c936bad69db4905a4ab3b2733d644dd2b31e0a",
+        balance_manager_id: balanceManagerId,
         limit: (params?.limit || 50).toString(),
         end_time: Math.floor(pageParam / 1000).toString()
       })
 
-      console.log(`/order_updates/${poolKey}?${searchParams.toString()}`)
       return await dbIndexerClient(`/order_updates/${poolKey}?${searchParams.toString()}`);
     },
     getNextPageParam: lastPage => {

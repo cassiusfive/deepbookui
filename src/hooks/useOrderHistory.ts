@@ -1,5 +1,5 @@
 import dbIndexerClient from "@/lib/indexer-client";
-import { useInfiniteQuery, UseInfiniteQueryResult, InfiniteData } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, UseInfiniteQueryResult, InfiniteData, UseQueryResult } from "@tanstack/react-query";
 
 export type Trade = {
   trade_id: string;
@@ -16,20 +16,21 @@ export type Trade = {
 
 export function useOrderHistory(
   poolKey: string, 
-  maker: string | null = null, 
-  taker: string | null = null, 
+  maker?: string, 
+  taker?: string, 
   limit?: number
 ): UseInfiniteQueryResult<InfiniteData<Trade[], number>, Error> {
   return useInfiniteQuery({
     queryKey: ["orderUpdates", poolKey, maker, taker, limit],
     queryFn: async ({ pageParam }) => {
       const searchParams = new URLSearchParams({
-        maker: "0xd335e8aa19d6dc04273d77e364c936bad69db4905a4ab3b2733d644dd2b31e0a",
         limit: (limit || 50).toString(),
         end_time: Math.floor(pageParam / 1000).toString()
       })
 
-      console.log(`/trades/${poolKey}?${searchParams.toString()}`)
+      if (maker) searchParams.append("maker", maker);
+      if (taker) searchParams.append("taker", taker);
+
       return await dbIndexerClient(`/trades/${poolKey}?${searchParams.toString()}`);
     },
     getNextPageParam: lastPage => {
@@ -41,5 +42,15 @@ export function useOrderHistory(
       return firstPage[0].timestamp
     },
     initialPageParam: Date.now(),
+    refetchInterval: 1000
   })
+}
+
+// for some reason infinite query doesn't work with refetchInterval
+export function useTradeHistory(poolKey: string): UseQueryResult<Trade[], Error> {
+  return useQuery({
+    queryKey: ["tradeHistory", poolKey],
+    queryFn: async () => await dbIndexerClient(`/trades/${poolKey}?limit=50`),
+    refetchInterval: 1000
+  });
 }
