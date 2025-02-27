@@ -8,7 +8,19 @@ import {
   useCurrentAccount,
   useSignAndExecuteTransaction,
 } from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
 
+import { useDeepBook } from "@/contexts/deepbook";
+import { useCurrentPool } from "@/contexts/pool";
+import { useMidPrice } from "@/hooks/useMidPrice";
+import { useQuantityOut } from "@/hooks/useQuantityOut";
+import { useOrderbook } from "@/hooks/useOrderbook";
+import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useBalancesFromCurrentPool, useManagerBalance } from "@/hooks/useBalances";
+import { useToast } from "@/hooks/useToast";
+import { mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
+
+import { ManageBalanceModal } from "@/components/manage-balance-modal";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,19 +32,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useDeepBook } from "@/contexts/deepbook";
-import { useCurrentPool } from "@/contexts/pool";
-import { useMidPrice } from "@/hooks/useMidPrice";
-import { useQuantityOut } from "@/hooks/useQuantityOut";
-import { useOrderbook } from "@/hooks/useOrderbook";
-import {
-  useBalancesFromCurrentPool,
-  useManagerBalance,
-} from "@/hooks/useBalances";
-import { Transaction } from "@mysten/sui/transactions";
-import { useToast } from "@/hooks/useToast";
-import { ManageBalanceModal } from "./manage-balance-modal";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
 
 type PositionType = "buy" | "sell";
 type OrderExecutionType = "limit" | "market";
@@ -46,7 +45,6 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { toast } = useToast();
   const dbClient = useDeepBook();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
 
   const { data: orderbook } = useOrderbook();
@@ -368,16 +366,11 @@ export default function Trade() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const account = useCurrentAccount();
-  const { balanceManagerKey, balanceManagerAddress, setBalanceManager } =
-    useCurrentManager();
-
-  console.log(balanceManagerKey);
+  const { balanceManagerKey, balanceManagerAddress, setBalanceManager } = useCurrentManager();
 
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-  const { data: baseAssetManagerBalance, refetch: refetchBaseBalance } =
-    useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
-  const { data: quoteAssetManagerBalance, refetch: refetchQuoteBalance } =
-    useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
+  const { data: baseAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
+  const { data: quoteAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     // @ts-expect-error
     execute: async ({ bytes, signature }) =>
@@ -412,7 +405,8 @@ export default function Trade() {
             (change) => {
               return (
                 change.type === "created" &&
-                change.objectType.includes("BalanceManager")
+                (change.objectType === `${mainnetPackageIds.DEEPBOOK_PACKAGE_ID}::balance_manager::BalanceManager` || 
+                 change.objectType === `${testnetPackageIds.DEEPBOOK_PACKAGE_ID}::balance_manager::BalanceManager`)
               );
             },
           )?.["objectId"];
@@ -425,9 +419,9 @@ export default function Trade() {
           });
         },
         onError: (error) => {
-          console.error("error depositing funds", error);
+          console.error("error creating balance manager", error);
           toast({
-            title: "❌ Failed to create Balance Manager",
+            title: "❌ Failed to create balance manager",
             description: error.message,
             duration: 3000,
           });
