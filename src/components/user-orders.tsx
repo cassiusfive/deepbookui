@@ -178,9 +178,9 @@ export default function OpenOrders() {
                     <div>No orders</div>
                   </div>
                 ) : (
-                  openOrders.map((order) => {
+                  openOrders.map((order, index) => {
                     return (
-                      <TableRow>
+                      <TableRow key={index}>
                         <TableCell>
                           {new Date(order.timestamp).toLocaleString()}
                         </TableCell>
@@ -264,9 +264,9 @@ export default function OpenOrders() {
                     <div>No orders</div>
                   </div>
                 ) : (
-                  history.map((order) => {
+                  history.map((order, index) => {
                     return (
-                      <TableRow>
+                      <TableRow key={index}>
                         <TableCell>
                           {new Date(order.timestamp).toLocaleString()}
                         </TableCell>
