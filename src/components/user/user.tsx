@@ -18,7 +18,7 @@ export default function User() {
             className="data-[state=active]:shadow-none"
             value="trade-history"
           >
-            Trade History
+            Order History
           </TabsTrigger>
           <TabsTrigger
             className="data-[state=active]:shadow-none"
