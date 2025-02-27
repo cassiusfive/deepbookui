@@ -12,7 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-
 export default function OrderHistory() {
   const pool = useCurrentPool();
   const { balanceManagerAddress } = useCurrentManager();

@@ -1,27 +1,20 @@
-"use client";
-
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useMemo, useEffect, useRef, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-} from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 
 import { useDeepBook } from "@/contexts/deepbook";
 import { useCurrentPool } from "@/contexts/pool";
+import { useBalancesFromCurrentPool } from "@/hooks/useBalances";
 import { useMidPrice } from "@/hooks/useMidPrice";
 import { useQuantityOut } from "@/hooks/useQuantityOut";
 import { useOrderbook } from "@/hooks/useOrderbook";
 import { useCurrentManager } from "@/hooks/useCurrentManager";
-import { useBalancesFromCurrentPool, useManagerBalance } from "@/hooks/useBalances";
 import { useToast } from "@/hooks/useToast";
-import { mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
+import { PositionType, OrderExecutionType } from "./trade";
 
-import { ManageBalanceModal } from "@/components/manage-balance-modal";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -31,17 +24,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-type PositionType = "buy" | "sell";
-type OrderExecutionType = "limit" | "market";
+import { Button } from "@/components/ui/button";
 
 type FormProps = {
   positionType: PositionType;
   orderExecutionType: OrderExecutionType;
 };
 
-function OrderForm({ positionType, orderExecutionType }: FormProps) {
+export default function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { toast } = useToast();
   const dbClient = useDeepBook();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
@@ -357,209 +347,6 @@ function OrderForm({ positionType, orderExecutionType }: FormProps) {
           {positionType == "buy" ? "Buy" : "Sell"} {pool.base_asset_symbol}
         </Button>
       </div>
-    </div>
-  );
-}
-
-export default function Trade() {
-  const { toast } = useToast();
-  const pool = useCurrentPool();
-  const dbClient = useDeepBook();
-  const account = useCurrentAccount();
-  const { balanceManagerKey, balanceManagerAddress, setBalanceManager } = useCurrentManager();
-
-  const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-  const { data: baseAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
-  const { data: quoteAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
-    // @ts-expect-error
-    execute: async ({ bytes, signature }) =>
-      await dbClient?.client.executeTransactionBlock({
-        transactionBlock: bytes,
-        signature,
-        options: {
-          showRawEffects: true,
-          showEffects: true,
-          showObjectChanges: true,
-        },
-      }),
-  });
-
-  const [positionType, setPositionType] = useState<PositionType>("buy");
-  const [orderType, setOrderType] = useState<OrderExecutionType>("limit");
-
-  const handleCreateBalanceManager = () => {
-    const tx = new Transaction();
-    dbClient?.balanceManager.createAndShareBalanceManager()(tx);
-
-    signAndExecuteTransaction(
-      {
-        transaction: tx,
-      },
-      {
-        onSuccess: (result) => {
-          console.log("created balance manager", result);
-
-          // @ts-ignore https://docs.sui.io/standards/deepbookv3-sdk#balance-manager
-          const managerAddress: string = result.objectChanges?.find(
-            (change) => {
-              return (
-                change.type === "created" &&
-                (change.objectType === `${mainnetPackageIds.DEEPBOOK_PACKAGE_ID}::balance_manager::BalanceManager` || 
-                 change.objectType === `${testnetPackageIds.DEEPBOOK_PACKAGE_ID}::balance_manager::BalanceManager`)
-              );
-            },
-          )?.["objectId"];
-          setBalanceManager(managerAddress);
-
-          toast({
-            title: "✅ Created balance manager",
-            description: managerAddress,
-            duration: 3000,
-          });
-        },
-        onError: (error) => {
-          console.error("error creating balance manager", error);
-          toast({
-            title: "❌ Failed to create balance manager",
-            description: error.message,
-            duration: 3000,
-          });
-        },
-      },
-    );
-  };
-
-  return (
-    <div className="flex h-full w-full min-w-fit shrink-0 flex-col">
-      <div className="border-b p-3">
-        <h1 className="pb-2">Available to trade</h1>
-        <div className="flex justify-between text-sm">
-          <div>{pool.base_asset_symbol}</div>
-          <div className="text-right">
-            {pool.round.display(baseAssetBalance)}
-          </div>
-        </div>
-        <div className="flex justify-between pb-8 text-sm">
-          <div>{pool.quote_asset_symbol}</div>
-          <div className="text-right">
-            {pool.round.display(quoteAssetBalance)}
-          </div>
-        </div>
-        {!account ? (
-          <div>Connect your wallet</div>
-        ) : !balanceManagerAddress ? (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleCreateBalanceManager}
-          >
-            Create a balance manager
-          </Button>
-        ) : (
-          <>
-            <h1 className="pb-2">Balance Manager Funds</h1>
-            <div className="flex justify-between text-sm">
-              <div>{pool.base_asset_symbol}</div>
-              <div className="text-right">
-                {pool.round.display(baseAssetManagerBalance?.balance || 0)}
-              </div>
-            </div>
-            <div className="flex justify-between text-sm">
-              <div>{pool.quote_asset_symbol}</div>
-              <div className="text-right">
-                {pool.round.display(quoteAssetManagerBalance?.balance || 0)}
-              </div>
-            </div>
-            <div className="flex w-full justify-center gap-4">
-              <ManageBalanceModal />
-            </div>
-          </>
-        )}
-      </div>
-
-      <Tabs defaultValue={positionType} className="h-full">
-        <TabsList className="h-12 w-full rounded-none p-0">
-          <TabsTrigger
-            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:border-b data-[state=active]:bg-background data-[state=active]:text-[#26a69a] data-[state=active]:shadow-none"
-            value="buy"
-            onClick={() => setPositionType("buy")}
-          >
-            Buy
-          </TabsTrigger>
-          <TabsTrigger
-            className="h-full w-1/2 rounded-none bg-secondary text-muted-foreground shadow-none data-[state=active]:border-b data-[state=active]:bg-background data-[state=active]:text-[#ef5350] data-[state=active]:shadow-none"
-            value="sell"
-            onClick={() => setPositionType("sell")}
-          >
-            Sell
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="buy" className="m-0">
-          <Tabs defaultValue={orderType} className="w-full py-3">
-            <TabsList className="w-full justify-start gap-3 bg-transparent p-0 pl-3">
-              <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
-                value="limit"
-                onClick={() => setOrderType("limit")}
-              >
-                LIMIT
-              </TabsTrigger>
-              <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
-                value="market"
-                onClick={() => setOrderType("market")}
-              >
-                MARKET
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="limit" className="m-0">
-              <OrderForm
-                positionType={positionType}
-                orderExecutionType={orderType}
-              />
-            </TabsContent>
-            <TabsContent value="market" className="m-0">
-              <OrderForm
-                positionType={positionType}
-                orderExecutionType={orderType}
-              />
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-        <TabsContent value="sell" className="m-0">
-          <Tabs defaultValue={orderType} className="w-full py-3">
-            <TabsList className="w-full justify-start gap-3 bg-transparent p-0 pl-3">
-              <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
-                value="limit"
-                onClick={() => setOrderType("limit")}
-              >
-                LIMIT
-              </TabsTrigger>
-              <TabsTrigger
-                className="w-1/4 text-xs shadow-none data-[state=active]:bg-secondary data-[state=active]:shadow-none"
-                value="market"
-                onClick={() => setOrderType("market")}
-              >
-                MARKET
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="limit" className="m-0">
-              <OrderForm
-                positionType={positionType}
-                orderExecutionType={orderType}
-              />
-            </TabsContent>
-            <TabsContent value="market" className="m-0">
-              <OrderForm
-                positionType={positionType}
-                orderExecutionType={orderType}
-              />
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

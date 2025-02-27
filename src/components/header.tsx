@@ -6,7 +6,14 @@ import { useMidPrice } from "@/hooks/useMidPrice";
 import { useSummary } from "@/hooks/useSummary";
 import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTrigger, 
+  DialogDescription, 
+  DialogTitle 
+} from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PairTable from "@/components/pair-table";
 import Settings from "@/components/settings";
@@ -125,6 +132,10 @@ export default function Navbar() {
             <SettingsIcon className="w-5" strokeWidth={1.5} />
           </DialogTrigger>
           <DialogContent>
+            <DialogHeader className="sr-only">
+              <DialogTitle className="sr-only">Settings</DialogTitle>
+              <DialogDescription className="sr-only">Change theme, network, or balance manager</DialogDescription>
+            </DialogHeader>
             <Settings />
           </DialogContent>
         </Dialog>
