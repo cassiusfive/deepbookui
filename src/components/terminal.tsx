@@ -13,25 +13,12 @@ const route = getRouteApi("/trade/$contractAddress");
 
 export default function Terminal() {
   const navigate = useNavigate();
-  const {
-    data: poolsData,
-    isLoading: poolsIsLoading,
-    error: poolsError,
-  } = usePools();
+  const { data: poolsData, isLoading: isPoolsLoading} = usePools();
   const { contractAddress } = route.useParams();
 
-  function getSelectedPool() {
-    return poolsData?.find((pool) => pool.pool_id == contractAddress);
-  }
-
-  if (poolsError) {
-    console.log(poolsError);
-    return <div>{poolsError.message}</div>;
-  }
-
-  const selectedPool = getSelectedPool();
-
-  if (poolsIsLoading && !selectedPool) {
+  const selectedPool = poolsData?.find((pool) => pool.pool_id == contractAddress);
+  
+  if (isPoolsLoading && !selectedPool) {
     return <div>loading</div>;
   }
 
@@ -43,7 +30,7 @@ export default function Terminal() {
       to: "/trade/$contractAddress",
       params: {
         contractAddress:
-          "0xb663828d6217467c8a1838a03793da896cbe745b150ebd57d82f814ca579fc22",
+          "0xf948981b806057580f91622417534f491da5f61aeaf33d0ed8e69fd5691c95ce",
       },
     });
     return null;
