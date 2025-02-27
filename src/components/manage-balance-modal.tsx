@@ -1,3 +1,19 @@
+import { useEffect, useMemo, useState } from "react";
+import { useCurrentAccount, useSignAndExecuteTransaction} from "@mysten/dapp-kit";
+import { Transaction } from "@mysten/sui/transactions";
+import { ChevronDown } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
+
+import { useCurrentPool } from "@/contexts/pool";
+import { useDeepBook } from "@/contexts/deepbook";
+import { useCoinsMetadata } from "@/hooks/useCoinMetadata";
+import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useToast } from "@/hooks/useToast";
+import { useBalance, useManagerBalance } from "@/hooks/useBalances";
+import { mainnetCoins } from "@/constants/deepbook";
+
 import {
   Dialog,
   DialogContent,
@@ -6,9 +22,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
 import {
   Form,
   FormControl,
@@ -18,8 +31,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Command,
   CommandEmpty,
@@ -33,24 +46,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "./ui/scroll-area";
-import { ChevronDown } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { mainnetCoins } from "@/constants/deepbook";
-import { useCoinsMetadata } from "@/hooks/useCoinMetadata";
-import { useBalance, useManagerBalance } from "@/hooks/useBalances";
-import { useCurrentPool } from "@/contexts/pool";
-import {
-  useCurrentAccount,
-  useSignAndExecuteTransaction,
-} from "@mysten/dapp-kit";
-import { useDeepBook } from "@/contexts/deepbook";
-import { Transaction } from "@mysten/sui/transactions";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type TransferType = "deposit" | "withdraw";
 
 export function ManageBalanceModal() {
+  const { toast } = useToast()
   const pool = useCurrentPool();
   const dbClient = useDeepBook()!;
   const account = useCurrentAccount();
@@ -66,11 +67,7 @@ export function ManageBalanceModal() {
   }));
 
   const [selectedAsset, setSelectedAsset] = useState("DEEP");
-  const { data: managerData } = useManagerBalance(
-    balanceManagerKey,
-    selectedAsset,
-  );
-  const managerBalance = managerData?.balance;
+  const { data: managerBalance, refetch: refetchManagerBalance } = useManagerBalance(balanceManagerKey, selectedAsset);
   const asset = mainnetCoins[selectedAsset];
   const { data: walletBalance } = useBalance(asset.type, asset.scalar);
 
@@ -88,7 +85,7 @@ export function ManageBalanceModal() {
           if (values.type === "withdraw") {
             if (
               managerBalance !== undefined &&
-              values.amount > managerBalance
+              values.amount > managerBalance.balance
             ) {
               ctx.addIssue({
                 path: ["amount"],
@@ -106,7 +103,7 @@ export function ManageBalanceModal() {
             }
           }
         }),
-    [managerBalance, walletBalance],
+    [managerBalance?.balance, walletBalance],
   );
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -133,21 +130,43 @@ export function ManageBalanceModal() {
   function handleDeposit(amount: number) {
     const tx = new Transaction();
 
-    tx.add(
-      dbClient.balanceManager.depositIntoManager(
-        balanceManagerKey,
-        selectedAsset,
-        amount,
-      ),
-    );
+    dbClient.balanceManager.depositIntoManager(
+      balanceManagerKey,
+      selectedAsset,
+      amount,
+    )(tx);
 
     signAndExecuteTransaction(
       {
         transaction: tx,
-      },
+      }, 
       {
-        onError: (err) => {
-          console.log(err);
+        onSuccess: async result => {
+          if (result.effects.status.status !== "success")  {
+            console.error("tx failed", result)
+            return toast({
+              title: "❌ Failed to deposit funds",
+              description: result.effects.status.error,
+              duration: 3000
+            });
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 200));
+          refetchManagerBalance();
+
+          toast({
+            title: `✅ Deposited ${amount} ${selectedAsset}`,
+            description: result.digest,
+            duration: 3000
+          });
+        },
+        onError: (error) => {
+          console.error(`error depositing into balance manager`, error);
+          toast({
+            title: `❌ Failed to deposit ${amount} ${selectedAsset}`,
+            description: error.message,
+            duration: 3000,
+          });
         },
       },
     );
@@ -155,19 +174,41 @@ export function ManageBalanceModal() {
 
   function handleWithdraw(amount: number) {
     const tx = new Transaction();
+    
+    dbClient.balanceManager.withdrawFromManager(
+      balanceManagerKey,
+      selectedAsset,
+      amount,
+      account!.address,
+    )(tx);
 
-    tx.add(
-      dbClient.balanceManager.withdrawFromManager(
-        managerKey,
-        selectedAsset,
-        amount,
-        account!.address,
-      ),
+    signAndExecuteTransaction(
+      {
+        transaction: tx,
+      },
+      {
+        onSuccess: async result => {
+          console.log(`withdrew from balance manager`, result);
+
+          await new Promise(resolve => setTimeout(resolve, 200));
+          refetchManagerBalance()
+
+          toast({
+            title: `✅ Withdrew ${amount} ${selectedAsset}`,
+            description: result.digest,
+            duration: 3000,
+          });
+        },
+        onError: (error) => {
+          console.error(`error withdrawing from balance manager`, error);
+          toast({
+            title: `❌ Failed to withdraw ${amount} ${selectedAsset}`,
+            description: error.message,
+            duration: 3000,
+          });
+        },
+      }
     );
-
-    signAndExecuteTransaction({
-      transaction: tx,
-    });
   }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -231,7 +272,7 @@ export function ManageBalanceModal() {
                 <p>
                   Manager Balance:{" "}
                   {managerBalance !== undefined
-                    ? `${managerBalance} ${selectedAsset}`
+                    ? `${managerBalance.balance} ${selectedAsset}`
                     : "--"}
                 </p>
                 <div className="relative my-4">
