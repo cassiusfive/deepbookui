@@ -5,13 +5,13 @@ import { z } from "zod";
 import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 
-import { useDeepBook } from "@/contexts/deepbook";
 import { useCurrentPool } from "@/contexts/pool";
+import { useDeepBook } from "@/contexts/deepbook";
+import { useBalanceManager } from "@/contexts/balanceManager";
 import { useBalancesFromCurrentPool } from "@/hooks/account/useBalances";
 import { useMidPrice } from "@/hooks/market/useMidPrice";
 import { useQuantityOut } from "@/hooks/market/useQuantityOut";
 import { useOrderbook } from "@/hooks/market/useOrderbook";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 import { useToast } from "@/hooks/useToast";
 import { PositionType, OrderExecutionType } from "./trade";
 
@@ -99,7 +99,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
   const amount = form.watch("amount");
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
-  const { balanceManagerKey, balanceManagerAddress } = useCurrentManager();
+  const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
 
   function onSubmit(
     values: z.infer<typeof formSchema>,
@@ -132,7 +132,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
       },
       {
         onSuccess: (result) => {
-          console.log(`placed ${type} order`, result);
+          console.log(`placed ${type} order\n`, result);
           toast({
             title: `✅ Placed ${type} order`,
             duration: 3000,
@@ -142,7 +142,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
           console.error(`error placing ${type} order`, error);
           toast({
             title: `❌ Failed to place ${type} order`,
-            description: error.message,
+            description: "Check console for error details",
             duration: 3000,
           });
         },

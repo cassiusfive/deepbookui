@@ -9,15 +9,15 @@ import {
   testnetPools,
 } from "@/constants/deepbook";
 import { useNetwork } from "@/contexts/network";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useBalanceManager } from "@/contexts/balanceManager";
 
-const DeepBookContext = createContext<DeepBookClient | null>(null);
+const DeepBookContext = createContext<DeepBookClient | undefined>(undefined);
 
 export function DeepBookProvider({ children }: { children: ReactNode }) {
   // get network and connected account
   const { network } = useNetwork();
   const account = useCurrentAccount();
-  const { balanceManagerKey, balanceManagerAddress } = useCurrentManager();
+  const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
 
   // reinitialize if user connects wallet or changes network
   const deepBookClient = useMemo(() => {

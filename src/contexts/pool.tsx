@@ -1,7 +1,7 @@
 import { Pool } from "@/hooks/market/usePools";
 import { createContext, useContext } from "react";
 
-export const PoolContext = createContext<Pool | null>(null);
+export const PoolContext = createContext<Pool | undefined>(undefined);
 
 function roundToPlace(number: number, precision: number) {
   if (isNaN(number)) {

@@ -4,8 +4,8 @@ import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
+import { useBalanceManager } from "@/contexts/balanceManager";
 import { useOrders } from "@/hooks/account/useOpenOrders";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 
 import { BookX, Loader2 } from "lucide-react";
 import {
@@ -31,7 +31,7 @@ export default function OpenOrders() {
   const { toast } = useToast();
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
-  const { balanceManagerKey, balanceManagerAddress } = useCurrentManager();
+  const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
   const orders = useOrders(pool.pool_name, balanceManagerAddress!);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set());

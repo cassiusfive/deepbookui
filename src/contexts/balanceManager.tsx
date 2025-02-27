@@ -1,7 +1,19 @@
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { useEffect, useState, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
 
-export function useCurrentManager() {
+type BalanceManagerContextType = {
+  balanceManagerKey: string;
+  balanceManagerAddress: string | undefined;
+  setBalanceManager: (address: string) => void;
+};
+
+const BalanceManagerContext = createContext<BalanceManagerContextType | undefined>(undefined);
+
+type BalanceManagerProviderProps = {
+  children: ReactNode;
+};
+
+export function BalanceManagerProvider({ children }: BalanceManagerProviderProps) {
   const account = useCurrentAccount();
 
   const balanceManagerKey = useMemo(
@@ -22,7 +34,7 @@ export function useCurrentManager() {
     setBalanceManagerAddress(
       localStorage.getItem(balanceManagerKey) ?? undefined,
     );
-  }, [balanceManagerKey])
+  }, [balanceManagerKey]);
 
   useEffect(() => {
     if (!balanceManagerKey) return;
@@ -36,16 +48,39 @@ export function useCurrentManager() {
     // this will only trigger if the event occurs in another tab / window
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [balanceManagerKey, setBalanceManagerAddress]);
+  }, []);
 
   const setBalanceManager = useMemo(
     () => (address: string) => {
       if (!balanceManagerKey) return;
       localStorage.setItem(balanceManagerKey, address);
-      setBalanceManagerAddress(address)
+      setBalanceManagerAddress(address);
     },
-    [balanceManagerKey, setBalanceManagerAddress]
+    [balanceManagerKey]
   );
 
-  return { balanceManagerKey, balanceManagerAddress, setBalanceManager };
+  const value = useMemo(
+    () => ({
+      balanceManagerKey,
+      balanceManagerAddress,
+      setBalanceManager,
+    }),
+    [balanceManagerKey, balanceManagerAddress, setBalanceManager]
+  );
+
+  return (
+    <BalanceManagerContext.Provider value={value}>
+      {children}
+    </BalanceManagerContext.Provider>
+  );
+}
+
+export function useBalanceManager() {
+  const context = useContext(BalanceManagerContext);
+  
+  if (context === undefined) {
+    throw new Error("useBalanceManager must be used within a BalanceManagerProvider");
+  }
+  
+  return context;
 }

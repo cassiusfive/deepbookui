@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useTheme } from "@/contexts/theme";
 import { useNetwork } from "@/contexts/network";
 import { useDeepBook } from "@/contexts/deepbook";
+import { useBalanceManager } from "@/contexts/balanceManager";
 
 import { useToast } from "@/hooks/useToast";
 
@@ -25,7 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { Sun, Moon, Copy } from "lucide-react";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 
 const formSchema = z.object({
   balanceManagerAddress: z
@@ -39,7 +39,7 @@ function ImportBalanceManagerForm() {
   const { network } = useNetwork();
   const account = useCurrentAccount();
   const dbClient = useDeepBook();
-  const { setBalanceManager } = useCurrentManager();
+  const { setBalanceManager } = useBalanceManager();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -121,7 +121,7 @@ export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const { network, setNetwork } = useNetwork();
 
-  const { balanceManagerAddress } = useCurrentManager();
+  const { balanceManagerAddress } = useBalanceManager();
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,5 +1,5 @@
 import { useCurrentPool } from "@/contexts/pool";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useBalanceManager } from "@/contexts/balanceManager";
 import { useOrderHistory } from "@/hooks/account/useOrderHistory";
 
 import { BookX } from "lucide-react";
@@ -14,7 +14,7 @@ import {
 
 export default function OrderHistory() {
   const pool = useCurrentPool();
-  const { balanceManagerAddress } = useCurrentManager();
+  const { balanceManagerAddress } = useBalanceManager();
   const orderHistory = useOrderHistory(pool.pool_name, balanceManagerAddress!);
 
   const history = orderHistory.data?.pages.flatMap((page) => page);
