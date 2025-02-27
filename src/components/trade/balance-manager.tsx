@@ -51,8 +51,20 @@ export default function ManageBalanceModal() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook()!;
   const account = useCurrentAccount();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const { balanceManagerKey } = useBalanceManager();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+    execute: async ({ bytes, signature }) =>
+      await dbClient?.client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          showRawEffects: true,
+          showEffects: true,
+          showObjectChanges: true,
+        },
+      }),
+  });
+  
 
   const coinTypes = Object.values(mainnetCoins).map((coin) => coin.type);
   const coinMetadataQueries = useCoinsMetadata(coinTypes);
