@@ -8,18 +8,15 @@ import { z } from "zod";
 
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useCoinsMetadata } from "@/hooks/useCoinMetadata";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useCoinsMetadata } from "@/hooks/assets/useCoinMetadata";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 import { useToast } from "@/hooks/useToast";
-import { useBalance, useManagerBalance } from "@/hooks/useBalances";
+import { useBalance, useManagerBalance } from "@/hooks/account/useBalances";
 import { mainnetCoins } from "@/constants/deepbook";
 
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -247,10 +244,6 @@ export default function ManageBalanceModal() {
         </Button>
       </DialogTrigger>
       <DialogContent className="w-100">
-        <DialogHeader className="sr-only">
-          <DialogTitle className="sr-only">Manage Balance</DialogTitle>
-          <DialogDescription className="sr-only">Deposit or withdraw assets from your balance manager.</DialogDescription>
-        </DialogHeader>
         <Tabs
           className="mt-4"
           value={transferType}

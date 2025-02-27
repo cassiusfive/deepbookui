@@ -4,8 +4,8 @@ import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useOrders } from "@/hooks/useUserOrders";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useOrders } from "@/hooks/account/useOpenOrders";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 
 import { BookX, Loader2 } from "lucide-react";
 import {

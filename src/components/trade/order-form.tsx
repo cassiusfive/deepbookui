@@ -7,11 +7,11 @@ import { Transaction } from "@mysten/sui/transactions";
 
 import { useDeepBook } from "@/contexts/deepbook";
 import { useCurrentPool } from "@/contexts/pool";
-import { useBalancesFromCurrentPool } from "@/hooks/useBalances";
-import { useMidPrice } from "@/hooks/useMidPrice";
-import { useQuantityOut } from "@/hooks/useQuantityOut";
-import { useOrderbook } from "@/hooks/useOrderbook";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useBalancesFromCurrentPool } from "@/hooks/account/useBalances";
+import { useMidPrice } from "@/hooks/market/useMidPrice";
+import { useQuantityOut } from "@/hooks/market/useQuantityOut";
+import { useOrderbook } from "@/hooks/market/useOrderbook";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 import { useToast } from "@/hooks/useToast";
 import { PositionType, OrderExecutionType } from "./trade";
 

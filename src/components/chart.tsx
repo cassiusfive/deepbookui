@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { createChart } from "lightweight-charts";
 import { useTheme } from "@/contexts/theme";
-import { useCandleData } from "@/hooks/useCandleData";
+import { useCandleData } from "@/hooks/market/useCandleData";
 
 export default function Chart() {
   const { theme } = useTheme();

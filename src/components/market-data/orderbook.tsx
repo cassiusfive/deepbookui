@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useCurrentPool } from "@/contexts/pool";
 import { useTheme } from "@/contexts/theme";
-import { useOrderbook, OrderbookEntry } from "@/hooks/useOrderbook";
+import { useOrderbook, OrderbookEntry } from "@/hooks/market/useOrderbook";
 import {
   Tooltip,
   TooltipContent,

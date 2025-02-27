@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useDeepBook } from "@/contexts/deepbook";
 
-export function useBalanceManagerAccount(poolKey: string, managerKey: string) {
+export function useDeepBookAccount(poolKey: string, managerKey: string) {
   const dbClient = useDeepBook();
 
   return useQuery({

@@ -4,8 +4,8 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
-import { useBalancesFromCurrentPool, useManagerBalance } from "@/hooks/useBalances";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useBalancesFromCurrentPool, useManagerBalance } from "@/hooks/account/useBalances";
 import { mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
 
 import { Button } from "@/components/ui/button";
