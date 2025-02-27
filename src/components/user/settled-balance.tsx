@@ -4,7 +4,7 @@ import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useBalanceManager } from "@/contexts/balanceManager";
 
 import {
   Table,
@@ -22,7 +22,7 @@ export default function SettledBalance() {
   const { toast } = useToast()
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
-  const { balanceManagerKey } = useCurrentManager();
+  const { balanceManagerKey } = useBalanceManager();
   const { data: account } = useDeepBookAccount(pool.pool_name, balanceManagerKey);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] = useState<Set<string>>(new Set());
@@ -52,10 +52,10 @@ export default function SettledBalance() {
           });
         },
         onError: (error) => {
-          console.error("failed to withdraw settled balances", error);
+          console.error("failed to withdraw settled balances\n", error);
           toast({
             title: "❌ Failed to withdraw settled balances",
-            description: error.message,
+            description: "Check console for error details",
             duration: 3000,
           });
         },

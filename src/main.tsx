@@ -14,10 +14,11 @@ import { getFullnodeUrl } from "@mysten/sui/client";
 
 import Terminal from "@/components/terminal.tsx";
 import { DeepBookProvider } from "@/contexts/deepbook";
-import { TooltipProvider } from "@/components/ui/tooltip";
-
+import { BalanceManagerProvider } from "@/contexts/balanceManager";
 import { NetworkProvider } from "@/contexts/network";
 import { useTheme, ThemeProvider } from "@/contexts/theme";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 import { lightTheme } from "@/theme/light";
 import { darkTheme } from "@/theme/dark";
 import "@mysten/dapp-kit/dist/index.css";
@@ -76,11 +77,13 @@ createRoot(document.getElementById("root")!).render(
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networks}>
             <WalletProviderWrapper>
-              <DeepBookProvider>
-                <TooltipProvider delayDuration={0}>
-                  <RouterProvider router={router} />
-                </TooltipProvider>
-              </DeepBookProvider>
+              <BalanceManagerProvider>
+                <DeepBookProvider>
+                  <TooltipProvider delayDuration={0}>
+                    <RouterProvider router={router} />
+                  </TooltipProvider>
+                </DeepBookProvider>
+              </BalanceManagerProvider>
             </WalletProviderWrapper>
           </SuiClientProvider>
         </QueryClientProvider>

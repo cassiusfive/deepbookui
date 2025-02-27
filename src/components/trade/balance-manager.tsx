@@ -9,7 +9,7 @@ import { z } from "zod";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useCoinsMetadata } from "@/hooks/assets/useCoinMetadata";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useBalanceManager } from "@/contexts/balanceManager";
 import { useToast } from "@/hooks/useToast";
 import { useBalance, useManagerBalance } from "@/hooks/account/useBalances";
 import { mainnetCoins } from "@/constants/deepbook";
@@ -52,7 +52,7 @@ export default function ManageBalanceModal() {
   const dbClient = useDeepBook()!;
   const account = useCurrentAccount();
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { balanceManagerKey } = useCurrentManager();
+  const { balanceManagerKey } = useBalanceManager();
 
   const coinTypes = Object.values(mainnetCoins).map((coin) => coin.type);
   const coinMetadataQueries = useCoinsMetadata(coinTypes);
@@ -125,7 +125,7 @@ export default function ManageBalanceModal() {
 
   function handleDeposit(amount: number) {
     const tx = new Transaction();
-
+    
     dbClient.balanceManager.depositIntoManager(
       balanceManagerKey,
       selectedAsset,
@@ -138,11 +138,13 @@ export default function ManageBalanceModal() {
       }, 
       {
         onSuccess: async result => {
+          console.log("deposited into balance manager\n", result);
+
           if (result.effects.status.status !== "success")  {
-            console.error("tx failed", result)
+            console.error("tx failed\n", result)
             return toast({
               title: "❌ Failed to deposit funds",
-              description: result.effects.status.error,
+              description: "Check console for error details",
               duration: 3000
             });
           }
@@ -157,10 +159,10 @@ export default function ManageBalanceModal() {
           });
         },
         onError: (error) => {
-          console.error(`error depositing into balance manager`, error);
+          console.error(`error depositing into balance manager\n`, error);
           toast({
             title: `❌ Failed to deposit ${amount} ${selectedAsset}`,
-            description: error.message,
+            description: "Check console for error details",
             duration: 3000,
           });
         },
@@ -184,7 +186,7 @@ export default function ManageBalanceModal() {
       },
       {
         onSuccess: async result => {
-          console.log(`withdrew from balance manager`, result);
+          console.log(`withdrew from balance manager\n`, result);
 
           await new Promise(resolve => setTimeout(resolve, 200));
           refetchManagerBalance()
@@ -196,10 +198,10 @@ export default function ManageBalanceModal() {
           });
         },
         onError: (error) => {
-          console.error(`error withdrawing from balance manager`, error);
+          console.error(`error withdrawing from balance manager\n`, error);
           toast({
             title: `❌ Failed to withdraw ${amount} ${selectedAsset}`,
-            description: error.message,
+            description: "Check console for error details",
             duration: 3000,
           });
         },

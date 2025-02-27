@@ -4,7 +4,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useBalanceManager } from "@/contexts/balanceManager";
 import { useBalancesFromCurrentPool, useManagerBalance } from "@/hooks/account/useBalances";
 import { mainnetPackageIds, testnetPackageIds } from "@/constants/deepbook";
 
@@ -16,7 +16,7 @@ export default function AccountSummary() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const account = useCurrentAccount();
-  const { balanceManagerKey, balanceManagerAddress, setBalanceManager } = useCurrentManager();
+  const { balanceManagerKey, balanceManagerAddress, setBalanceManager } = useBalanceManager();
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
   const { data: baseAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
   const { data: quoteAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
@@ -45,7 +45,7 @@ export default function AccountSummary() {
       },
       {
         onSuccess: (result) => {
-          console.log("created balance manager", result);
+          console.log("created balance manager\n", result);
 
           // @ts-ignore https://docs.sui.io/standards/deepbookv3-sdk#balance-manager
           const managerAddress: string = result.objectChanges?.find(
@@ -66,10 +66,10 @@ export default function AccountSummary() {
           });
         },
         onError: (error) => {
-          console.error("error creating balance manager", error);
+          console.error("error creating balance manager\n", error);
           toast({
             title: "❌ Failed to create balance manager",
-            description: error.message,
+            description: "Check console for error details",
             duration: 3000,
           });
         },
