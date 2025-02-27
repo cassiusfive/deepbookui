@@ -27,7 +27,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
@@ -50,7 +49,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 type TransferType = "deposit" | "withdraw";
 
-export function ManageBalanceModal() {
+export default function ManageBalanceModal() {
   const { toast } = useToast()
   const pool = useCurrentPool();
   const dbClient = useDeepBook()!;
@@ -66,7 +65,7 @@ export function ManageBalanceModal() {
     metadata: coinMetadataQueries[index]?.data,
   }));
 
-  const [selectedAsset, setSelectedAsset] = useState("DEEP");
+  const [selectedAsset, setSelectedAsset] = useState(pool.quote_asset_symbol);
   const { data: managerBalance, refetch: refetchManagerBalance } = useManagerBalance(balanceManagerKey, selectedAsset);
   const asset = mainnetCoins[selectedAsset];
   const { data: walletBalance } = useBalance(asset.type, asset.scalar);
@@ -111,7 +110,7 @@ export function ManageBalanceModal() {
     mode: "onBlur",
     defaultValues: {
       type: "deposit",
-      asset: "DEEP",
+      asset: pool.quote_asset_symbol,
       amount: 1.0,
     },
   });
@@ -248,6 +247,10 @@ export function ManageBalanceModal() {
         </Button>
       </DialogTrigger>
       <DialogContent className="w-100">
+        <DialogHeader className="sr-only">
+          <DialogTitle className="sr-only">Manage Balance</DialogTitle>
+          <DialogDescription className="sr-only">Deposit or withdraw assets from your balance manager.</DialogDescription>
+        </DialogHeader>
         <Tabs
           className="mt-4"
           value={transferType}
