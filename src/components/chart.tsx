@@ -61,6 +61,11 @@ export default function Chart() {
       borderVisible: false,
       wickUpColor: "#26a69a",
       wickDownColor: "#ef5350",
+      priceFormat: {
+        type: "price",
+        precision: 4,
+        minMove: .0001
+      },
     });
 
     if (candles) {
