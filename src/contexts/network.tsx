@@ -47,10 +47,5 @@ export function NetworkProvider({
 }
 
 export const useNetwork = () => {
-  const context = useContext(NetworkProviderContext);
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-
-  return context;
+  return useContext(NetworkProviderContext);
 };

@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useMemo } from "react";
+import { createContext, useContext, ReactNode, useMemo } from "react";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { DeepBookClient } from "@mysten/deepbook-v3";
 import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
@@ -11,7 +11,7 @@ import {
 import { useNetwork } from "@/contexts/network";
 import { useCurrentManager } from "@/hooks/useCurrentManager";
 
-export const DeepBookContext = createContext<DeepBookClient | null>(null);
+const DeepBookContext = createContext<DeepBookClient | null>(null);
 
 export function DeepBookProvider({ children }: { children: ReactNode }) {
   // get network and connected account
@@ -38,9 +38,6 @@ export function DeepBookProvider({ children }: { children: ReactNode }) {
     });
   }, [account?.address, network, balanceManagerAddress, balanceManagerKey]);
 
-  // watch for updates to balance manager
-  // ie balance manager is created while submitting tx
-
   return (
     <DeepBookContext.Provider value={deepBookClient}>
       {children}
@@ -52,7 +49,7 @@ export function useDeepBook() {
   const context = useContext(DeepBookContext);
 
   if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error("useDeepBook must be used within a DeepBookProvider");
 
   return context;
 }

@@ -27,9 +27,8 @@ function roundToPlace(number: number, precision: number) {
 export function useCurrentPool() {
   const context = useContext(PoolContext);
 
-  if (!context) {
-    throw Error("useCurrentPool must be used within PoolProvider");
-  }
+  if (!context)
+    throw new Error("useCurrentPool must be used within PoolProvider");
 
   const quotePrecision =
     9 -

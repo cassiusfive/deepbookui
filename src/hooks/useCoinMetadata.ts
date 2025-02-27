@@ -22,7 +22,7 @@ export function useCoinMetadata(coinType: string) {
   const dbClient = useDeepBook();
 
   return useQuery({
-    queryKey: ["coinMetadata2", coinType],
+    queryKey: ["coinMetadata", coinType],
     queryFn: async () => {
       return fetchCoinMetadata(dbClient!.client, coinType);
     },
@@ -34,7 +34,7 @@ export function useCoinsMetadata(coinTypes: string[]) {
 
   return useQueries({
     queries: coinTypes.map((coinType) => ({
-      queryKey: ["coinMetadata2", coinType],
+      queryKey: ["coinMetadata", coinType],
       queryFn: async () => {
         return fetchCoinMetadata(dbClient!.client, coinType);
       },
