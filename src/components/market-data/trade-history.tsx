@@ -1,5 +1,5 @@
 import { useCurrentPool } from "@/contexts/pool";
-import { useTradeHistory } from "@/hooks/useOrderHistory";
+import { useTradeHistory } from "@/hooks/market/useTradeHistory";
 
 export default function TradeHistory() {
   const pool = useCurrentPool();

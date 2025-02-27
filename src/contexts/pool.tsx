@@ -1,4 +1,4 @@
-import { Pool } from "@/hooks/usePools";
+import { Pool } from "@/hooks/market/usePools";
 import { createContext, useContext } from "react";
 
 export const PoolContext = createContext<Pool | null>(null);

@@ -1,6 +1,6 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 
-import { usePools } from "@/hooks/usePools";
+import { usePools } from "@/hooks/market/usePools";
 import { PoolContext } from "@/contexts/pool";
 
 import Header from "@/components/header/header";

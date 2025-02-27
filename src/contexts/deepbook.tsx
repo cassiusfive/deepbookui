@@ -9,7 +9,7 @@ import {
   testnetPools,
 } from "@/constants/deepbook";
 import { useNetwork } from "@/contexts/network";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 
 const DeepBookContext = createContext<DeepBookClient | null>(null);
 

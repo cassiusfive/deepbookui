@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useSummary } from "@/hooks/useSummary";
-import { usePools } from "@/hooks/usePools";
-import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
+import { useSummary } from "@/hooks/market/useSummary";
+import { usePools } from "@/hooks/market/usePools";
+import { usePoolAssetMetadata } from "@/hooks/assets/usePoolAssetMetadata";
 import { Input } from "@/components/ui/input";
 
 import suiImg from "@/assets/sui.png";

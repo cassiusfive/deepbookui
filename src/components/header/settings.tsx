@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { Sun, Moon, Copy } from "lucide-react";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 
 const formSchema = z.object({
   balanceManagerAddress: z

@@ -2,17 +2,14 @@ import { ConnectButton } from "@mysten/dapp-kit";
 import { Settings as SettingsIcon } from "lucide-react";
 import { useCurrentPool } from "@/contexts/pool";
 
-import { useMidPrice } from "@/hooks/useMidPrice";
-import { useSummary } from "@/hooks/useSummary";
-import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
+import { useMidPrice } from "@/hooks/market/useMidPrice";
+import { useSummary } from "@/hooks/market/useSummary";
+import { usePoolAssetMetadata } from "@/hooks/assets/usePoolAssetMetadata";
 
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader, 
   DialogTrigger, 
-  DialogDescription, 
-  DialogTitle 
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PairTable from "@/components/header/pair-table";
@@ -132,10 +129,6 @@ export default function Header() {
             <SettingsIcon className="w-5" strokeWidth={1.5} />
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader className="sr-only">
-              <DialogTitle className="sr-only">Settings</DialogTitle>
-              <DialogDescription className="sr-only">Change theme, network, or balance manager</DialogDescription>
-            </DialogHeader>
             <Settings />
           </DialogContent>
         </Dialog>

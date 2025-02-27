@@ -4,7 +4,7 @@ import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
 
 import {
   Table,
@@ -16,14 +16,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useBalanceManagerAccount } from "@/hooks/useBalanceManagerAccount";
+import { useDeepBookAccount } from "@/hooks/account/useDeepBookAccount";
 
 export default function SettledBalance() {
   const { toast } = useToast()
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const { balanceManagerKey } = useCurrentManager();
-  const { data: balanceManagerAccount } = useBalanceManagerAccount(pool.pool_name, balanceManagerKey);
+  const { data: account } = useDeepBookAccount(pool.pool_name, balanceManagerKey);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [loadingClaimSettledBalances, setLoadingClaimSettledBalances] = useState<Set<string>>(new Set());
 
@@ -85,10 +85,10 @@ export default function SettledBalance() {
           <TableRow>
             <TableCell>{pool.pool_name}</TableCell>
             <TableCell>
-              {balanceManagerAccount?.settled_balances.base}
+              {account?.settled_balances.base}
             </TableCell>
             <TableCell>
-              {balanceManagerAccount?.settled_balances.quote}
+              {account?.settled_balances.quote}
             </TableCell>
             <TableCell>
               <Button

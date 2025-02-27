@@ -1,6 +1,6 @@
 import { useCurrentPool } from "@/contexts/pool";
-import { useCurrentManager } from "@/hooks/useCurrentManager";
-import { useOrderHistory } from "@/hooks/useOrderHistory";
+import { useCurrentManager } from "@/hooks/account/useBalanceManager";
+import { useOrderHistory } from "@/hooks/account/useOrderHistory";
 
 import { BookX } from "lucide-react";
 import {

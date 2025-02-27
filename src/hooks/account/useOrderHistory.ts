@@ -1,7 +1,7 @@
 import dbIndexerClient from "@/lib/indexer-client";
-import { useQuery, useInfiniteQuery, UseInfiniteQueryResult, InfiniteData, UseQueryResult } from "@tanstack/react-query";
+import { useInfiniteQuery, UseInfiniteQueryResult, InfiniteData } from "@tanstack/react-query";
 
-export type Trade = {
+type Trade = {
   trade_id: string;
   maker_balance_manager_id: string;
   maker_order_id: string;
@@ -46,11 +46,3 @@ export function useOrderHistory(
   })
 }
 
-// for some reason infinite query doesn't work with refetchInterval
-export function useTradeHistory(poolKey: string): UseQueryResult<Trade[], Error> {
-  return useQuery({
-    queryKey: ["tradeHistory", poolKey],
-    queryFn: async () => await dbIndexerClient(`/trades/${poolKey}?limit=50`),
-    refetchInterval: 1000
-  });
-}
