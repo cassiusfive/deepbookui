@@ -1,5 +1,5 @@
-import OrderBook from "@/components/orderbook";
-import TradeHistory from "@/components/trade-history";
+import OrderBook from "@/components/market-data/orderbook";
+import TradeHistory from "@/components/market-data/trade-history";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

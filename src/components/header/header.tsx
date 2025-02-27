@@ -15,15 +15,15 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import PairTable from "@/components/pair-table";
-import Settings from "@/components/settings";
+import PairTable from "@/components/header/pair-table";
+import Settings from "@/components/header/settings";
 
 import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
 import usdtImg from "@/assets/usdt.png";
 import notFound from "@/assets/not-found.png";
 
-export default function Navbar() {
+export default function Header() {
   const pool = useCurrentPool();
   const { data: summary, isLoading: isSummaryLoading } = useSummary();
   const { data: price, isLoading: isPriceLoading } = useMidPrice(

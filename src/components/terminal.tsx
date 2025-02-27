@@ -2,10 +2,11 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router";
 
 import { usePools } from "@/hooks/usePools";
 import { PoolContext } from "@/contexts/pool";
-import Header from "@/components/header";
+
+import Header from "@/components/header/header";
 import Chart from "@/components/chart";
+import MarketData from "@/components/market-data/market-data";
 import Trade from "@/components/trade/trade";
-import MarketOverview from "@/components/market-overview";
 import User from "@/components/user/user";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -46,7 +47,7 @@ export default function Terminal() {
               <Chart />
             </div>
             <div className="col-start-2 col-end-2 h-full border-l">
-              <MarketOverview />
+              <MarketData />
             </div>
             <div className="col-start-3 col-end-3 row-start-1 row-end-3 border-l">
               <Trade />
