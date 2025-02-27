@@ -6,7 +6,7 @@ import Header from "@/components/header";
 import Chart from "@/components/chart";
 import Trade from "@/components/trade";
 import MarketOverview from "@/components/market-overview";
-import User from "@/components/user-orders";
+import User from "@/components/user/user";
 import { Toaster } from "@/components/ui/toaster";
 
 const route = getRouteApi("/trade/$contractAddress");
