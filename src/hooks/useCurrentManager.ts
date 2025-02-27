@@ -9,22 +9,20 @@ export function useCurrentManager() {
     [account?.address],
   );
 
-  const [balanceManagerAddress, setBalanceManagerAddress] = useState<
-    string | undefined
-  >(undefined);
+  const [balanceManagerAddress, setBalanceManagerAddress] = useState<string | undefined>(undefined);
 
-  // Update state when account changes
   useEffect(() => {
     if (!balanceManagerKey) {
+      // if key changes to "" that means they logged out
       setBalanceManagerAddress(undefined);
       return;
     }
 
-    // Get latest value from localStorage
+    // update on account change
     setBalanceManagerAddress(
       localStorage.getItem(balanceManagerKey) ?? undefined,
     );
-  }, [balanceManagerKey]); // Depend on balanceManagerKey to refresh state on account change
+  }, [balanceManagerKey])
 
   useEffect(() => {
     if (!balanceManagerKey) return;
@@ -34,16 +32,20 @@ export function useCurrentManager() {
         localStorage.getItem(balanceManagerKey) ?? undefined,
       );
     };
-
+  
+    // this will only trigger if the event occurs in another tab / window
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [balanceManagerKey]);
+  }, [balanceManagerKey, setBalanceManagerAddress]);
 
-  const setBalanceManager = (address: string) => {
-    if (!balanceManagerKey) return;
-    localStorage.setItem(balanceManagerKey, address);
-    setBalanceManagerAddress(address);
-  };
+  const setBalanceManager = useMemo(
+    () => (address: string) => {
+      if (!balanceManagerKey) return;
+      localStorage.setItem(balanceManagerKey, address);
+      setBalanceManagerAddress(address)
+    },
+    [balanceManagerKey, setBalanceManagerAddress]
+  );
 
   return { balanceManagerKey, balanceManagerAddress, setBalanceManager };
 }
