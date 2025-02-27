@@ -13,6 +13,7 @@ import Settings from "@/components/settings";
 
 import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
+import usdtImg from "@/assets/usdt.png";
 import notFound from "@/assets/not-found.png";
 
 export default function Navbar() {
@@ -25,20 +26,22 @@ export default function Navbar() {
   const pair = summary?.find((pair) => pair.trading_pairs == pool.pool_name);
 
   const { baseAssetMetadata, quoteAssetMetadata } = usePoolAssetMetadata(
-    pool?.base_asset_id,
-    pool?.quote_asset_id,
+    pool.base_asset_id,
+    pool.quote_asset_id,
   );
 
   let baseAssetImg = baseAssetMetadata?.iconUrl;
   if (!baseAssetImg) {
     if (pair?.base_currency.includes("SUI")) baseAssetImg = suiImg;
     else if (pair?.base_currency.includes("USDC")) baseAssetImg = usdcImg;
+    else if (pair?.base_currency.includes("USDT")) baseAssetImg = usdtImg;
     else baseAssetImg = notFound;
   }
   let quoteAssetImg = quoteAssetMetadata?.iconUrl;
   if (!quoteAssetImg) {
     if (pair?.quote_currency.includes("SUI")) quoteAssetImg = suiImg;
     else if (pair?.quote_currency.includes("USDC")) quoteAssetImg = usdcImg;
+    else if (pair?.quote_currency.includes("USDT")) quoteAssetImg = usdtImg;
     else quoteAssetImg = notFound;
   }
 
@@ -70,7 +73,7 @@ export default function Navbar() {
                   className="ml-[-8px] w-6 rounded-full"
                 />
               </div>
-              <div className="whitespace-nowrap">{`${baseAssetMetadata?.symbol}-${quoteAssetMetadata?.symbol}`}</div>
+              <div className="whitespace-nowrap">{`${pair.base_currency}-${pair.quote_currency}`}</div>
             </div>
           </SheetTrigger>
           <SheetContent

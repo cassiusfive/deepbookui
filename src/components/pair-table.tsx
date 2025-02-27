@@ -2,18 +2,23 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useSummary } from "@/hooks/useSummary";
 import { usePools } from "@/hooks/usePools";
+import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
 import { Input } from "@/components/ui/input";
+
 import suiImg from "@/assets/sui.png";
 import usdcImg from "@/assets/usdc.png";
+import usdtImg from "@/assets/usdt.png";
 import notFound from "@/assets/not-found.png";
-import { usePoolAssetMetadata } from "@/hooks/usePoolAssetMetadata";
 
 export default function PairTable() {
   const { data: pools } = usePools();
   const { data: summaryData } = useSummary();
 
-  const poolAssetMetadata = pools!.flatMap((pool) => [
-    usePoolAssetMetadata(pool.base_asset_id, pool.quote_asset_id)
+  const poolAssetMetadata = pools?.flatMap((pool) => [
+    {
+      pool: pool,
+      metadata: usePoolAssetMetadata(pool.base_asset_id, pool.quote_asset_id)
+    }
   ])
 
   const [inputValue, setInputValue] = useState<string>("");
@@ -52,32 +57,22 @@ export default function PairTable() {
           <p className="text-center">No pair found</p>
         )}
         {filteredData.map((pair) => {
-          const pool = pools.find(
-            (pool) =>
-              pool.base_asset_symbol == pair.base_currency &&
-              pool.quote_asset_symbol == pair.quote_currency,
-          );
-          if (!pool) return <div>pool not found</div>;
+          const pool = pools.find(pool => pool.pool_name === pair.trading_pairs);
+          if (!pool) throw Error("pool not found");
 
-          let baseAssetImg = poolAssetMetadata.find(
-            (pool) => pool.baseAssetMetadata?.symbol === pair.base_currency,
-          )?.baseAssetMetadata?.iconUrl;
-
+          let baseAssetImg = poolAssetMetadata.find(item => item.pool.pool_id === pool.pool_id)?.metadata.baseAssetMetadata?.iconUrl
           if (!baseAssetImg) {
             if (pair.base_currency.includes("SUI")) baseAssetImg = suiImg;
-            else if (pair.base_currency.includes("USDC"))
-              baseAssetImg = usdcImg;
+            else if (pair.base_currency.includes("USDC")) baseAssetImg = usdcImg;
+            else if (pair.base_currency.includes("USDT")) baseAssetImg = usdtImg;
             else baseAssetImg = notFound;
           }
 
-          let quoteAssetImg = poolAssetMetadata.find(
-            (pool) => pool.quoteAssetMetadata?.symbol === pair.quote_currency,
-          )?.quoteAssetMetadata?.iconUrl
-
+          let quoteAssetImg = poolAssetMetadata.find(item => item.pool.pool_id === pool.pool_id)?.metadata.quoteAssetMetadata?.iconUrl
           if (!quoteAssetImg) {
             if (pair.quote_currency.includes("SUI")) quoteAssetImg = suiImg;
-            else if (pair.quote_currency.includes("USDC"))
-              quoteAssetImg = usdcImg;
+            else if (pair.quote_currency.includes("USDC")) quoteAssetImg = usdcImg;
+            else if (pair.quote_currency.includes("USDT")) quoteAssetImg = usdtImg
             else quoteAssetImg = notFound;
           }
 
