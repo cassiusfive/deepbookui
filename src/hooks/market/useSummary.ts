@@ -19,7 +19,7 @@ export type Pair = {
 export function useSummary(): UseQueryResult<Pair[], Error> {
   return useQuery({
     queryKey: ["summary"],
-    queryFn: async() => await dbIndexerClient("/summary"),
+    queryFn: async () => await dbIndexerClient("/summary"),
     refetchInterval: 1000,
   });
 }

@@ -42,7 +42,7 @@ export function useManagerBalance(managerKey: string, coinKey: string) {
 
   return useQuery({
     queryKey: ["managerBalance", managerKey, coinKey],
-    queryFn: () => dbClient?.checkManagerBalance(managerKey, coinKey),
+    queryFn: async () => await dbClient?.checkManagerBalance(managerKey, coinKey),
     enabled: !!dbClient && coinKey.length > 0,
   });
 }
