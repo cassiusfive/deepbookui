@@ -45,7 +45,7 @@ export default function SettledBalance() {
       },
       {
         onSuccess: (result) => {
-          console.log("withdrew settled balances", result);
+          console.log("withdrew settled balances\n", result);
           toast({
             title: "✅ Withdrew settled balances",
             duration: 3000,

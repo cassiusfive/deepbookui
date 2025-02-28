@@ -15,7 +15,7 @@ import { getFullnodeUrl } from "@mysten/sui/client";
 import Terminal from "@/components/terminal.tsx";
 import { DeepBookProvider } from "@/contexts/deepbook";
 import { BalanceManagerProvider } from "@/contexts/balanceManager";
-import { NetworkProvider } from "@/contexts/network";
+import { NetworkProvider, useNetwork } from "@/contexts/network";
 import { useTheme, ThemeProvider } from "@/contexts/theme";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -70,22 +70,30 @@ const networks = {
   mainnet: { url: getFullnodeUrl("mainnet") },
 };
 
+function App() {
+  const { network } = useNetwork()
+
+  return (
+    <SuiClientProvider networks={networks} network={network}>
+      <WalletProviderWrapper>
+        <BalanceManagerProvider>
+          <DeepBookProvider>
+            <TooltipProvider delayDuration={0}>
+              <RouterProvider router={router} />
+            </TooltipProvider>
+          </DeepBookProvider>
+        </BalanceManagerProvider>
+      </WalletProviderWrapper>
+    </SuiClientProvider>
+  )
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider storageKey="vite-ui-theme">
       <NetworkProvider>
         <QueryClientProvider client={queryClient}>
-          <SuiClientProvider networks={networks}>
-            <WalletProviderWrapper>
-              <BalanceManagerProvider>
-                <DeepBookProvider>
-                  <TooltipProvider delayDuration={0}>
-                    <RouterProvider router={router} />
-                  </TooltipProvider>
-                </DeepBookProvider>
-              </BalanceManagerProvider>
-            </WalletProviderWrapper>
-          </SuiClientProvider>
+          <App />
         </QueryClientProvider>
       </NetworkProvider>
     </ThemeProvider>

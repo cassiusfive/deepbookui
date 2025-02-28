@@ -64,7 +64,6 @@ export default function ManageBalanceModal() {
         },
       }),
   });
-  
 
   const coinTypes = Object.values(mainnetCoins).map((coin) => coin.type);
   const coinMetadataQueries = useCoinsMetadata(coinTypes);
@@ -152,7 +151,7 @@ export default function ManageBalanceModal() {
         onSuccess: async result => {
           console.log("deposited into balance manager\n", result);
 
-          if (result.effects.status.status !== "success")  {
+          if (result.effects?.status.status !== "success")  {
             console.error("tx failed\n", result)
             return toast({
               title: "❌ Failed to deposit funds",

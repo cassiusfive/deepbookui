@@ -4,11 +4,11 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
-
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useBalanceManager } from "@/contexts/balanceManager";
-import { useBalancesFromCurrentPool } from "@/hooks/account/useBalances";
+import { useManagerBalance } from "@/hooks/account/useBalances";
+import { useOrders } from "@/hooks/account/useOrders";
 import { useMidPrice } from "@/hooks/market/useMidPrice";
 import { useQuantityOut } from "@/hooks/market/useQuantityOut";
 import { useOrderbook } from "@/hooks/market/useOrderbook";
@@ -33,13 +33,31 @@ type FormProps = {
 
 export default function OrderForm({ positionType, orderExecutionType }: FormProps) {
   const { toast } = useToast();
-  const dbClient = useDeepBook();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
-
-  const { data: orderbook } = useOrderbook();
   const pool = useCurrentPool();
+  const dbClient = useDeepBook();
+  const { data: orderbook } = useOrderbook();
   const { data: priceData } = useMidPrice(pool.pool_name);
+  const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
+  const { data: managerBaseAssetBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
+  const { data: managerQuoteAssetBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
+  const { refetch } = useOrders(pool.pool_name, balanceManagerKey, "Open");
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+    execute: async ({ bytes, signature }) =>
+      await dbClient?.client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          showRawEffects: true,
+          showEffects: true,
+          showObjectChanges: true,
+        },
+      }),
+  });
+
+  const balanceManagerBalance = {
+    baseAsset: managerBaseAssetBalance ? managerBaseAssetBalance.balance : 0,
+    quoteAsset: managerQuoteAssetBalance ? managerQuoteAssetBalance.balance : 0
+  }
 
   const bestBid = useMemo(() => orderbook?.bids[0].price, [orderbook]);
   const midPrice = useMemo(() => priceData, [priceData]);
@@ -68,7 +86,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
     .superRefine((data, ctx) => {
       if (
         positionType == "buy" &&
-        data.amount * data.limitPrice > quoteAssetBalance
+        data.amount * data.limitPrice > balanceManagerBalance.quoteAsset
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -77,7 +95,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
         });
       }
 
-      if (positionType == "sell" && data.amount > baseAssetBalance) {
+      if (positionType == "sell" && data.amount > balanceManagerBalance.baseAsset) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `Insufficient ${pool.base_asset_symbol} balance`,
@@ -99,7 +117,6 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
   const amount = form.watch("amount");
   const total = limitPrice * amount;
   const { data: quantityOut } = useQuantityOut(0, total);
-  const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
 
   function onSubmit(
     values: z.infer<typeof formSchema>,
@@ -111,7 +128,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
       dbClient?.deepBook.placeLimitOrder({
         poolKey: pool.pool_name,
         balanceManagerKey: balanceManagerKey,
-        clientOrderId: Date.now().toString(), // client side order number
+        clientOrderId: "1", // client side order number
         price: values.limitPrice,
         quantity: values.amount,
         isBid: positionType === "buy",
@@ -120,7 +137,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
       dbClient?.deepBook.placeMarketOrder({
         poolKey: pool.pool_name,
         balanceManagerKey: balanceManagerKey,
-        clientOrderId: Date.now().toString(), // client side order number
+        clientOrderId: "1", // client side order number
         quantity: values.amount,
         isBid: positionType === "buy",
       })(tx);
@@ -131,7 +148,19 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
         transaction: tx,
       },
       {
-        onSuccess: (result) => {
+        onSuccess: async result => {
+          if (result.effects?.status.status !== "success") {
+            console.error("tx failed\n", result)
+            return toast({
+              title: `❌ Failed to place ${type} order`,
+              description: "Check console for error details",
+              duration: 3000
+            });
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          refetch();
+
           console.log(`placed ${type} order\n`, result);
           toast({
             title: `✅ Placed ${type} order`,
@@ -172,7 +201,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
   const updateAmount = useCallback(
     (percent: 0.25 | 0.5 | 1) => {
       if (positionType == "buy") {
-        const newAmount = ((percent * quoteAssetBalance) / limitPrice) * 0.99;
+        const newAmount = ((percent * balanceManagerBalance.quoteAsset) / limitPrice) * 0.99;
         const integerAmount = newAmount * 10 ** pool.base_asset_decimals;
         const rounded =
           Math.floor(integerAmount / pool.lot_size) * pool.lot_size;
@@ -180,12 +209,12 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
           shouldValidate: true,
         });
       } else {
-        form.setValue("amount", percent * baseAssetBalance, {
+        form.setValue("amount", percent * balanceManagerBalance.baseAsset, {
           shouldValidate: true,
         });
       }
     },
-    [pool, limitPrice, positionType, baseAssetBalance, quoteAssetBalance, form],
+    [pool, limitPrice, positionType, balanceManagerBalance.baseAsset, balanceManagerBalance.quoteAsset, form],
   );
 
   return (
