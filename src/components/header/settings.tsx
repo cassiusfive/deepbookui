@@ -76,6 +76,7 @@ function ImportBalanceManagerForm() {
         title: "❌ Balance manager does not exist",
         duration: 3000,
       });
+      //@ts-ignore
     } else if (res.data?.content?.fields.owner !== account?.address) {
       toast({
         title: "❌ You don't own this balance manager",
