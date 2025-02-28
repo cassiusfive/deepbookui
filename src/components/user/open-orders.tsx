@@ -5,17 +5,10 @@ import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useBalanceManager } from "@/contexts/balanceManager";
-import { useOrders } from "@/hooks/account/useOrders";
+import { useManagerBalance } from "@/hooks/account/useBalances";
+import { useOpenOrders } from "@/hooks/account/useOpenOrders";
+import { useTradeHistory } from "@/hooks/account/useTradeHistory";
 
-import { BookX, Loader2 } from "lucide-react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -25,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { useManagerBalance } from "@/hooks/account/useBalances";
+import { BookX, Loader2 } from "lucide-react";
 
 export default function OpenOrders() {
   const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set());
@@ -33,8 +26,11 @@ export default function OpenOrders() {
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
-  const { refetch: refetchManagerBalance } = useManagerBalance(balanceManagerKey, pool.pool_name);
-  const orders = useOrders(pool.pool_name, balanceManagerAddress!, "Open");
+  const { refetch: refetchManagerBaseAssetBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
+  const { refetch: refetchManagerQuoteAssetBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
+  const { refetch: refetchMakerTradeHistory } = useTradeHistory(pool.pool_name, balanceManagerAddress);
+  const { refetch: refetchTakerTradeHistory } = useTradeHistory(pool.pool_name, undefined, balanceManagerAddress);
+
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     execute: async ({ bytes, signature }) =>
       await dbClient?.client.executeTransactionBlock({
@@ -48,29 +44,7 @@ export default function OpenOrders() {
       }),
   });
 
-  if (!dbClient) return;
-
-  const orderMap = new Map();
-  orders.data?.pages.forEach(page => {
-    const sortedOrders = page.sort((a, b) => a.timestamp - b.timestamp);
-    sortedOrders.forEach(order => {
-      const orderId = order.order_id;
-      const currentStatus = order.status;
-    
-      if (!orderMap.has(orderId)) {
-        orderMap.set(orderId, order);
-        return;
-      }
-
-      if (currentStatus === "Modified") {
-        orderMap.set(orderId, order);
-      } else if (currentStatus === "Canceled" || currentStatus === "Expired") {
-        orderMap.delete(orderId);
-      }
-    })
-  });
-
-  const openOrders = Array.from(orderMap.values());
+  const orders = useOpenOrders(pool.pool_name, balanceManagerKey);
 
   const handleCancelOrder = (orderId: string) => {
     setloadingCancelOrders((prev) => new Set([...prev, orderId]));
@@ -87,7 +61,7 @@ export default function OpenOrders() {
       {
         transaction: tx,
       },
-      {
+      { 
         onSuccess: async result => {
           if (result.effects?.status.status !== "success")  {
             console.error("tx failed\n", result)
@@ -98,11 +72,14 @@ export default function OpenOrders() {
             });
           }
 
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // slight delay is needed for data to update before refetch
+          await new Promise(resolve => setTimeout(resolve, 400));
           orders.refetch();
-          refetchManagerBalance();
+          refetchManagerBaseAssetBalance();
+          refetchManagerQuoteAssetBalance();
+          refetchMakerTradeHistory();
+          refetchTakerTradeHistory();
 
-          
           console.log("canceled order\n", result);
           toast({
             title: "✅ Canceled order",
@@ -133,37 +110,26 @@ export default function OpenOrders() {
       <Table>
         <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
           <TableRow>
-            <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
-            <TableHead>TYPE</TableHead>
-            <TableHead>PRICE</TableHead>
+            <TableHead className="pl-4 text-left">EXPIRATION</TableHead>
             <TableHead>QUANTITY</TableHead>
-            <TableHead>TOTAL</TableHead>
             <TableHead>ID</TableHead>
-            <TableHead>STATUS</TableHead>
             <TableHead className="pr-4 text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
-          {!openOrders || openOrders?.length === 0 ? (
+          {!orders.data || orders.data?.length === 0 ? (
             <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
               <BookX />
               <div>No orders</div>
             </div>
           ) : (
-            openOrders.map((order, index) => {
+            orders.data?.map((order, index) => {
+              if (!order) return;
               return (
                 <TableRow key={index}>
-                  <TableCell>
-                    {new Date(order.timestamp).toLocaleString()}
-                  </TableCell>
-                  <TableCell>{order.type}</TableCell>
-                  <TableCell>{order.price}</TableCell>
-                  <TableCell>{`${order.filled_quantity} / ${order.original_quantity}`}</TableCell>
-                  <TableCell>
-                    {order.filled_quantity * order.price}
-                  </TableCell>
+                  <TableCell>{new Date(Number(order.expire_timestamp) / 1000000).toLocaleString()}</TableCell>
+                  <TableCell>{`${order.filled_quantity} / ${order.quantity}`}</TableCell>
                   <TableCell>{order.order_id}</TableCell>
-                  <TableCell>{order.status}</TableCell>
                   <TableCell>
                     <Button
                       variant="outline"

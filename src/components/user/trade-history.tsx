@@ -1,8 +1,7 @@
 import { useCurrentPool } from "@/contexts/pool";
 import { useBalanceManager } from "@/contexts/balanceManager";
-import { useOrderHistory } from "@/hooks/account/useOrderHistory";
+import { useTradeHistory } from "@/hooks/account/useTradeHistory";
 
-import { BookX } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,14 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BookX } from "lucide-react";
 
-export default function OrderHistory() {
+export default function TradeHistory() {
   const pool = useCurrentPool();
   const { balanceManagerAddress } = useBalanceManager();
-  const orders = useOrderHistory(pool.pool_name, balanceManagerAddress!);
+  const makerOrders = useTradeHistory(pool.pool_name, balanceManagerAddress);
+  const takerOrders = useTradeHistory(pool.pool_name, undefined, balanceManagerAddress);
 
-  const allOrders = orders.data?.pages.flatMap((page) => page) || [];
-  const sortedOrders = allOrders.sort((a, b) => b.timestamp - a.timestamp);
+  const makerHistory = makerOrders.data?.pages.flatMap((page) => page) || [];
+  const takerHistory = takerOrders.data?.pages.flatMap((page) => page) || [];
+
+  const sortedOrders = [...makerHistory, ...takerHistory].sort((a, b) => b.timestamp - a.timestamp);
 
   return (
     <div className="no-scrollbar relative h-[180px] overflow-y-auto [&>div]:static">
@@ -30,8 +33,7 @@ export default function OrderHistory() {
             <TableHead>PRICE ({pool.quote_asset_symbol})</TableHead>
             <TableHead>QUANTITY ({pool.base_asset_symbol})</TableHead>
             <TableHead>TOTAL ({pool.quote_asset_symbol})</TableHead>
-            <TableHead>ID</TableHead>
-            <TableHead className="pr-4 text-right">STATUS</TableHead>
+            <TableHead className="pr-4 text-right">ID</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="text-nowrap text-xs [&_tr]:border-none [&_tr_td:first-child]:pl-4 [&_tr_td:first-child]:text-muted-foreground [&_tr_td:last-child]:pr-4 [&_tr_td:last-child]:text-right">
@@ -47,10 +49,9 @@ export default function OrderHistory() {
                   <TableCell>{new Date(order.timestamp).toLocaleString()}</TableCell>
                   <TableCell>{order.type}</TableCell>
                   <TableCell>{order.price}</TableCell>
-                  <TableCell>{`${order.filled_quantity} / ${order.original_quantity}`}</TableCell>
-                  <TableCell>{order.filled_quantity * order.price} </TableCell>
-                  <TableCell>{order.order_id}</TableCell>
-                  <TableCell>{order.status}</TableCell>
+                  <TableCell>{order.base_volume}</TableCell>
+                  <TableCell>{order.base_volume * order.price}</TableCell>
+                  <TableCell>{order.trade_id}</TableCell>
                 </TableRow>
               );
             })

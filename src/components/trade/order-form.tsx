@@ -8,7 +8,7 @@ import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useBalanceManager } from "@/contexts/balanceManager";
 import { useManagerBalance } from "@/hooks/account/useBalances";
-import { useOrders } from "@/hooks/account/useOrders";
+import { useOpenOrders } from "@/hooks/account/useOpenOrders";
 import { useMidPrice } from "@/hooks/market/useMidPrice";
 import { useQuantityOut } from "@/hooks/market/useQuantityOut";
 import { useOrderbook } from "@/hooks/market/useOrderbook";
@@ -38,9 +38,9 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
   const { data: orderbook } = useOrderbook();
   const { data: priceData } = useMidPrice(pool.pool_name);
   const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
-  const { data: managerBaseAssetBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
-  const { data: managerQuoteAssetBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
-  const { refetch } = useOrders(pool.pool_name, balanceManagerKey, "Open");
+  const { data: managerBaseAssetBalance, refetch: refetchManagerBaseAssetBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
+  const { data: managerQuoteAssetBalance, refetch: refetchManagerQuoteAssetBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
+  const { refetch: refetchOpenOrders } = useOpenOrders(pool.pool_name, balanceManagerKey);
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
     execute: async ({ bytes, signature }) =>
       await dbClient?.client.executeTransactionBlock({
@@ -128,7 +128,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
       dbClient?.deepBook.placeLimitOrder({
         poolKey: pool.pool_name,
         balanceManagerKey: balanceManagerKey,
-        clientOrderId: "1", // client side order number
+        clientOrderId: Date.now().toString(), // client side order number
         price: values.limitPrice,
         quantity: values.amount,
         isBid: positionType === "buy",
@@ -137,7 +137,7 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
       dbClient?.deepBook.placeMarketOrder({
         poolKey: pool.pool_name,
         balanceManagerKey: balanceManagerKey,
-        clientOrderId: "1", // client side order number
+        clientOrderId: Date.now().toString(), // client side order number
         quantity: values.amount,
         isBid: positionType === "buy",
       })(tx);
@@ -158,8 +158,11 @@ export default function OrderForm({ positionType, orderExecutionType }: FormProp
             });
           }
 
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          refetch();
+          // slight delay is needed for data to update before refetch
+          await new Promise(resolve => setTimeout(resolve, 400)); 
+          refetchOpenOrders();
+          refetchManagerBaseAssetBalance();
+          refetchManagerQuoteAssetBalance();
 
           console.log(`placed ${type} order\n`, result);
           toast({
