@@ -7,7 +7,7 @@ export function useMidPrice(poolKey: string) {
   return useQuery({
     queryKey: ["midPrice", poolKey],
     queryFn: async () => {
-      return dbClient?.midPrice(poolKey);
+      return await dbClient?.midPrice(poolKey);
     },
     refetchInterval: 1000,
     enabled: !!dbClient,

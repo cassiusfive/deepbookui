@@ -8,8 +8,8 @@ export function useQuantityOut(baseQuantity: number, quoteQuantity: number) {
 
   return useQuery({
     queryKey: ["quantityOut", pool.pool_name, baseQuantity, quoteQuantity],
-    queryFn: () => {
-      return dbClient?.getQuantityOut(
+    queryFn: async () => {
+      return await dbClient?.getQuantityOut(
         pool.pool_name,
         baseQuantity,
         quoteQuantity,

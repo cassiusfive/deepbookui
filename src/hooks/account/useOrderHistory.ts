@@ -1,38 +1,33 @@
-import dbIndexerClient from "@/lib/indexer-client";
 import { useInfiniteQuery, UseInfiniteQueryResult, InfiniteData } from "@tanstack/react-query";
+import dbIndexerClient from "@/lib/indexer-client";
 
-type Trade = {
-  trade_id: string;
-  maker_balance_manager_id: string;
-  maker_order_id: string;
-  taker_balance_manager_id: string;
-  taker_order_id: string;
-  type: string;
+type Order = {
+  order_id: string;
   price: number;
-  base_volume: number;
-  quote_volume: number;
+  original_quantity: number;
+  remaining_quantity: number;
+  filled_quantity: number;
   timestamp: number;
-};
+  type: "buy" | "sell"; 
+  balance_manager_id: string;
+  status: "Placed" | "Modified" | "Canceled" | "Expired";
+}
 
 export function useOrderHistory(
   poolKey: string, 
-  maker?: string, 
-  taker?: string, 
+  balanceManagerId: string, 
   limit?: number
-): UseInfiniteQueryResult<InfiniteData<Trade[], number>, Error> {
+): UseInfiniteQueryResult<InfiniteData<Order[], number>, Error> {
   return useInfiniteQuery({
-    queryKey: ["orderUpdates", poolKey, maker, taker, limit],
+    queryKey: ["orderUpdates", poolKey, balanceManagerId, limit],
     queryFn: async ({ pageParam }) => {
       const searchParams = new URLSearchParams({
+        balance_manager_id: balanceManagerId,
         limit: (limit || 50).toString(),
         end_time: Math.floor(pageParam / 1000).toString()
       })
 
-      if (maker) searchParams.append("maker_balance_manager_id", maker);
-      if (taker) searchParams.append("taker_balance_manager_id", taker);
-
-      console.log(`/trades/${poolKey}?${searchParams.toString()}`)
-      return await dbIndexerClient(`/trades/${poolKey}?${searchParams.toString()}`);
+      return await dbIndexerClient(`/order_updates/${poolKey}?${searchParams.toString()}`) as Order[];
     },
     getNextPageParam: lastPage => {
       if (!lastPage || lastPage.length === 0) return undefined
@@ -43,8 +38,5 @@ export function useOrderHistory(
       return firstPage[0].timestamp
     },
     initialPageParam: Date.now(),
-    refetchInterval: 10000,
-    enabled: !!maker || !!taker
   })
 }
-
