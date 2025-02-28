@@ -28,8 +28,8 @@ export function useOrderHistory(
         end_time: Math.floor(pageParam / 1000).toString()
       })
 
-      if (maker) searchParams.append("maker", maker);
-      if (taker) searchParams.append("taker", taker);
+      if (maker) searchParams.append("maker_balance_manager_id", maker);
+      if (taker) searchParams.append("taker_balance_manager_id", taker);
 
       return await dbIndexerClient(`/trades/${poolKey}?${searchParams.toString()}`);
     },
@@ -42,7 +42,7 @@ export function useOrderHistory(
       return firstPage[0].timestamp
     },
     initialPageParam: Date.now(),
-    refetchInterval: 1000
+    refetchInterval: 10000
   })
 }
 

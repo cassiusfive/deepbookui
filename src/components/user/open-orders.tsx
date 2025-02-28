@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/useToast";
 import { useCurrentPool } from "@/contexts/pool";
 import { useDeepBook } from "@/contexts/deepbook";
 import { useBalanceManager } from "@/contexts/balanceManager";
-import { useOrders } from "@/hooks/account/useOpenOrders";
+import { useOrders } from "@/hooks/account/useOrders";
 
 import { BookX, Loader2 } from "lucide-react";
 import {
@@ -25,24 +25,52 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-
+import { useManagerBalance } from "@/hooks/account/useBalances";
 
 export default function OpenOrders() {
+  const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const pool = useCurrentPool();
   const dbClient = useDeepBook();
   const { balanceManagerKey, balanceManagerAddress } = useBalanceManager();
-  const orders = useOrders(pool.pool_name, balanceManagerAddress!);
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-  const [loadingCancelOrders, setloadingCancelOrders] = useState<Set<string>>(new Set());
+  const { refetch: refetchManagerBalance } = useManagerBalance(balanceManagerKey, pool.pool_name);
+  const orders = useOrders(pool.pool_name, balanceManagerAddress!, "Open");
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
+    execute: async ({ bytes, signature }) =>
+      await dbClient?.client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          showRawEffects: true,
+          showEffects: true,
+          showObjectChanges: true,
+        },
+      }),
+  });
 
   if (!dbClient) return;
 
-  const openOrders = orders.data?.pages.flatMap((page) =>
-    page.filter(
-      (order) => order.status === "Placed" || order.status === "Modified",
-    ),
-  );
+  const orderMap = new Map();
+  orders.data?.pages.forEach(page => {
+    const sortedOrders = page.sort((a, b) => a.timestamp - b.timestamp);
+    sortedOrders.forEach(order => {
+      const orderId = order.order_id;
+      const currentStatus = order.status;
+    
+      if (!orderMap.has(orderId)) {
+        orderMap.set(orderId, order);
+        return;
+      }
+
+      if (currentStatus === "Modified") {
+        orderMap.set(orderId, order);
+      } else if (currentStatus === "Canceled" || currentStatus === "Expired") {
+        orderMap.delete(orderId);
+      }
+    })
+  });
+
+  const openOrders = Array.from(orderMap.values());
 
   const handleCancelOrder = (orderId: string) => {
     setloadingCancelOrders((prev) => new Set([...prev, orderId]));
@@ -60,18 +88,32 @@ export default function OpenOrders() {
         transaction: tx,
       },
       {
-        onSuccess: (result) => {
-          console.log("canceled order", result);
+        onSuccess: async result => {
+          if (result.effects?.status.status !== "success")  {
+            console.error("tx failed\n", result)
+            return toast({
+              title: "❌ Failed to cancel order",
+              description: "Check console for error details",
+              duration: 3000
+            });
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 500));
+          orders.refetch();
+          refetchManagerBalance();
+
+          
+          console.log("canceled order\n", result);
           toast({
-            title: `✅ Canceled order ${orderId}`,
+            title: "✅ Canceled order",
             duration: 3000,
           });
         },
         onError: (error) => {
-          console.error("failed to cancel order", error);
+          console.error("failed to cancel order\n", error);
           toast({
-            title: `❌ Failed to cancel order ${orderId}`,
-            description: error.message,
+            title: "❌ Failed to cancel order",
+            description: "Check console for error details",
             duration: 3000,
           });
         },

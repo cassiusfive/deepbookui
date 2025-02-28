@@ -20,9 +20,7 @@ export default function AccountSummary() {
   const { baseAssetBalance, quoteAssetBalance } = useBalancesFromCurrentPool();
   const { data: baseAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.base_asset_symbol);
   const { data: quoteAssetManagerBalance } = useManagerBalance(balanceManagerKey, pool.quote_asset_symbol);
-
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction({
-    // @ts-expect-error
     execute: async ({ bytes, signature }) =>
       await dbClient?.client.executeTransactionBlock({
         transactionBlock: bytes,
