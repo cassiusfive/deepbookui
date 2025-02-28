@@ -17,8 +17,8 @@ export default function OrderHistory() {
   const pool = useCurrentPool();
   const { balanceManagerAddress } = useBalanceManager();
   const orders = useOrders(pool.pool_name, balanceManagerAddress!, "Closed");
-  const makerOrders = useOrderHistory(pool.pool_name, balanceManagerAddress!);
-  const takerOrders = useOrderHistory(pool.pool_name, undefined, balanceManagerAddress!);
+  const makerOrders = useOrderHistory(pool.pool_name, balanceManagerAddress);
+  const takerOrders = useOrderHistory(pool.pool_name, undefined, balanceManagerAddress);
 
   const canceledHistory = orders.data?.pages.flatMap((page) => page) || [];
   const makerHistory = makerOrders.data?.pages.flatMap((page) => page) || [];
@@ -28,7 +28,7 @@ export default function OrderHistory() {
   const sortedOrders = allOrders.sort((a, b) => b.timestamp - a.timestamp);
 
   return (
-    <div className="no-scrollbar relative h-[180px] overflow-y-auto">
+    <div className="no-scrollbar relative h-[180px] overflow-y-auto [&>div]:static">
       <Table>
         <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
           <TableRow>

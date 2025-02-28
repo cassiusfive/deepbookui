@@ -187,33 +187,6 @@ export default function OpenOrders() {
           )}
         </TableBody>
       </Table>
-      <div className="mt-4">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => orders.fetchPreviousPage()}
-                disabled={
-                  !orders.hasPreviousPage || orders.isFetchingPreviousPage
-                }
-              />
-            </PaginationItem>
-
-            <PaginationItem>
-              <PaginationLink></PaginationLink>
-            </PaginationItem>
-
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => orders.fetchNextPage()}
-                disabled={
-                  !orders.hasNextPage || orders.isFetchingNextPage
-                }
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
     </div>
   )
 }

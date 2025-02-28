@@ -31,6 +31,7 @@ export function useOrderHistory(
       if (maker) searchParams.append("maker_balance_manager_id", maker);
       if (taker) searchParams.append("taker_balance_manager_id", taker);
 
+      console.log(`/trades/${poolKey}?${searchParams.toString()}`)
       return await dbIndexerClient(`/trades/${poolKey}?${searchParams.toString()}`);
     },
     getNextPageParam: lastPage => {
@@ -42,7 +43,8 @@ export function useOrderHistory(
       return firstPage[0].timestamp
     },
     initialPageParam: Date.now(),
-    refetchInterval: 10000
+    refetchInterval: 10000,
+    enabled: !!maker || !!taker
   })
 }
 
