@@ -15,7 +15,7 @@ async function fetchCoinMetadata(client: SuiClient, coinType: string) {
   const res = await client.getCoinMetadata({ coinType });
   if (!res) return;
 
-  return { ...res, iconUrl: res.iconUrl || ICON_MAP[res?.symbol] || notFound };
+  return { ...res, iconUrl: ICON_MAP[res?.symbol] || res.iconUrl || notFound };
 }
 
 export function useCoinMetadata(coinType: string) {
