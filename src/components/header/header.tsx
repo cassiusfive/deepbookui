@@ -6,11 +6,7 @@ import { useMidPrice } from "@/hooks/market/useMidPrice";
 import { useSummary } from "@/hooks/market/useSummary";
 import { usePoolAssetMetadata } from "@/hooks/assets/usePoolAssetMetadata";
 
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogTrigger, 
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import PairTable from "@/components/header/pair-table";
 import Settings from "@/components/header/settings";
@@ -88,7 +84,7 @@ export default function Header() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex gap-8">
+        <div className="hidden gap-8 md:flex">
           <div className="flex shrink-0 flex-col">
             <div className="text-nowrap text-sm text-muted-foreground">
               LAST PRICE (24H)

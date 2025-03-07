@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useCurrentAccount, useSignAndExecuteTransaction} from "@mysten/dapp-kit";
+import {
+  useCurrentAccount,
+  useSignAndExecuteTransaction,
+} from "@mysten/dapp-kit";
 import { Transaction } from "@mysten/sui/transactions";
 import { ChevronDown } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,11 +17,7 @@ import { useToast } from "@/hooks/useToast";
 import { useBalance, useManagerBalance } from "@/hooks/account/useBalances";
 import { mainnetCoins } from "@/constants/deepbook";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -47,7 +46,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 type TransferType = "deposit" | "withdraw";
 
 export default function ManageBalanceModal() {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const pool = useCurrentPool();
   const dbClient = useDeepBook()!;
   const account = useCurrentAccount();
@@ -74,7 +73,8 @@ export default function ManageBalanceModal() {
   }));
 
   const [selectedAsset, setSelectedAsset] = useState(pool.quote_asset_symbol);
-  const { data: managerBalance, refetch: refetchManagerBalance } = useManagerBalance(balanceManagerKey, selectedAsset);
+  const { data: managerBalance, refetch: refetchManagerBalance } =
+    useManagerBalance(balanceManagerKey, selectedAsset);
   const asset = mainnetCoins[selectedAsset];
   const { data: walletBalance } = useBalance(asset.type, asset.scalar);
 
@@ -136,7 +136,7 @@ export default function ManageBalanceModal() {
 
   function handleDeposit(amount: number) {
     const tx = new Transaction();
-    
+
     dbClient.balanceManager.depositIntoManager(
       balanceManagerKey,
       selectedAsset,
@@ -146,27 +146,27 @@ export default function ManageBalanceModal() {
     signAndExecuteTransaction(
       {
         transaction: tx,
-      }, 
+      },
       {
-        onSuccess: async result => {
+        onSuccess: async (result) => {
           console.log("deposited into balance manager\n", result);
 
-          if (result.effects?.status.status !== "success")  {
-            console.error("tx failed\n", result)
+          if (result.effects?.status.status !== "success") {
+            console.error("tx failed\n", result);
             return toast({
               title: "❌ Failed to deposit funds",
               description: "Check console for error details",
-              duration: 3000
+              duration: 3000,
             });
           }
-          
-          await new Promise(resolve => setTimeout(resolve, 200));
+
+          await new Promise((resolve) => setTimeout(resolve, 200));
           refetchManagerBalance();
 
           toast({
             title: `✅ Deposited ${amount} ${selectedAsset}`,
             description: result.digest,
-            duration: 3000
+            duration: 3000,
           });
         },
         onError: (error) => {
@@ -183,7 +183,7 @@ export default function ManageBalanceModal() {
 
   function handleWithdraw(amount: number) {
     const tx = new Transaction();
-    
+
     dbClient.balanceManager.withdrawFromManager(
       balanceManagerKey,
       selectedAsset,
@@ -196,11 +196,11 @@ export default function ManageBalanceModal() {
         transaction: tx,
       },
       {
-        onSuccess: async result => {
+        onSuccess: async (result) => {
           console.log(`withdrew from balance manager\n`, result);
 
-          await new Promise(resolve => setTimeout(resolve, 200));
-          refetchManagerBalance()
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          refetchManagerBalance();
 
           toast({
             title: `✅ Withdrew ${amount} ${selectedAsset}`,
@@ -216,7 +216,7 @@ export default function ManageBalanceModal() {
             duration: 3000,
           });
         },
-      }
+      },
     );
   }
 
@@ -256,7 +256,7 @@ export default function ManageBalanceModal() {
           Withdraw
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-100">
+      <DialogContent className="w-screen">
         <Tabs
           className="mt-4"
           value={transferType}
