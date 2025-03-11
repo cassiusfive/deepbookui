@@ -21,10 +21,10 @@ export default function OrderHistory() {
   const sortedOrders = allOrders.sort((a, b) => b.timestamp - a.timestamp);
 
   return (
-    <div className="no-scrollbar relative h-[180px] overflow-y-auto [&>div]:static">
+    <div className="no-scrollbar relative h-[180px] min-w-fit overflow-y-auto [&>div]:static">
       <Table>
         <TableHeader className="sticky top-0 text-nowrap bg-background text-xs [&_tr]:border-none">
-          <TableRow>
+          <TableRow className="">
             <TableHead className="pl-4 text-left">TIME PLACED</TableHead>
             <TableHead>TYPE</TableHead>
             <TableHead>PRICE ({pool.quote_asset_symbol})</TableHead>
@@ -44,7 +44,9 @@ export default function OrderHistory() {
             sortedOrders.map((order, index) => {
               return (
                 <TableRow key={index}>
-                  <TableCell>{new Date(order.timestamp).toLocaleString()}</TableCell>
+                  <TableCell>
+                    {new Date(order.timestamp).toLocaleString()}
+                  </TableCell>
                   <TableCell>{order.type}</TableCell>
                   <TableCell>{order.price}</TableCell>
                   <TableCell>{`${order.filled_quantity} / ${order.original_quantity}`}</TableCell>
@@ -58,5 +60,5 @@ export default function OrderHistory() {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

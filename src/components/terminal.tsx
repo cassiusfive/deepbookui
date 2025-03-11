@@ -55,12 +55,12 @@ export default function Terminal() {
             {/* On md screens: 3-column grid as before */}
             <div className="grid h-full w-full grid-cols-1 grid-rows-[400px_400px_auto_auto] md:grid-cols-[minmax(0,1fr)_270px_270px] md:grid-rows-[max(60vh,400px)_minmax(100px,1fr)]">
               {/* Chart */}
-              <div className="col-span-1 border-b md:col-start-1 md:col-end-1 md:row-start-1 md:row-end-1 md:border-b-0">
+              <div className="col-span-1 border-b md:col-start-1 md:col-end-1 md:row-start-1 md:row-end-3 md:border-b-0">
                 <Chart />
               </div>
 
               {/* Market Data */}
-              <div className="col-span-1 border-b md:col-start-2 md:col-end-2 md:row-start-1 md:row-end-1 md:border-b-0 md:border-l">
+              <div className="col-span-1 border-b md:col-start-2 md:col-end-2 md:row-start-1 md:row-end-3 md:border-b-0 md:border-l">
                 <MarketData />
               </div>
 

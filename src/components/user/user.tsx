@@ -6,7 +6,7 @@ import SettledBalance from "./settled-balance";
 
 export default function User() {
   return (
-    <div className="h-full">
+    <div className="min-w-fit">
       <Tabs defaultValue="open-orders">
         <TabsList className="w-full justify-start rounded-none bg-background px-4 py-6">
           <TabsTrigger
