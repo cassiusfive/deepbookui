@@ -95,42 +95,50 @@ export default function OrderBook() {
   const pool = useCurrentPool();
   const { data, isLoading } = useOrderbook();
   const spreadRowRef = useRef<HTMLTableRowElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const hasScrolled = useRef(false);
 
-  // scroll to center
   useEffect(() => {
-    if (!data || hasScrolled.current) return
-    spreadRowRef.current?.scrollIntoView({ 
-      block: "center",
-      behavior: "instant"
-    });
-    hasScrolled.current = true
+    if (!data || hasScrolled.current || !spreadRowRef.current || !tableContainerRef.current) return;
+    
+    const container = tableContainerRef.current;
+    const spreadRow = spreadRowRef.current;
+    const containerHeight = container.clientHeight;
+    const spreadRowTop = spreadRow.offsetTop;
+    const spreadRowHeight = spreadRow.clientHeight;
+    
+    const scrollPosition = spreadRowTop - (containerHeight / 2) + (spreadRowHeight / 2);
+    
+    container.scrollTop = scrollPosition;
+    hasScrolled.current = true;
   }, [data]);
 
   if (isLoading) return <div></div>;
   if (!data) return <div>Error</div>;
 
   return (
-    <table className="h-full w-full text-xs">
-      <thead className="sticky top-0 z-10 h-6 bg-background text-muted-foreground shadow-[0_0_0_1px_hsl(var(--border))]">
-        <tr>
-          <th className="w-full text-nowrap pr-6 text-right">{`Amount (${pool.base_asset_symbol})`}</th>
-          <th className="w-auto text-nowrap pr-3">{`Price (${pool.quote_asset_symbol})`}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <OrderbookEntries entries={data!.asks} type="ask" />
-        <tr className="border-y" ref={spreadRowRef}>
-          <td
-            colSpan={2}
-            className="text-small w-full items-center justify-center py-1 text-right pr-3"
-          >
-            <span className="text-muted-foreground">SPREAD</span>
-            <span className="text-right pl-12">{data!.spreadAmount.toFixed(5)}</span>
-          </td>
-        </tr>
-        <OrderbookEntries entries={data!.bids} type="bid" />
-      </tbody>
-    </table>
+    <div ref={tableContainerRef} className="h-full overflow-y-auto">
+      <table className="w-full text-xs">
+        <thead className="sticky top-0 z-10 h-6 bg-background text-muted-foreground shadow-[0_0_0_1px_hsl(var(--border))]">
+          <tr>
+            <th className="w-full text-nowrap pr-6 text-right">{`Amount (${pool.base_asset_symbol})`}</th>
+            <th className="w-auto text-nowrap pr-3">{`Price (${pool.quote_asset_symbol})`}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <OrderbookEntries entries={data!.asks} type="ask" />
+          <tr className="border-y" ref={spreadRowRef}>
+            <td
+              colSpan={2}
+              className="text-small w-full items-center justify-center py-1 text-right pr-3"
+            >
+              <span className="text-muted-foreground">SPREAD</span>
+              <span className="text-right pl-12">{data!.spreadAmount.toFixed(5)}</span>
+            </td>
+          </tr>
+          <OrderbookEntries entries={data!.bids} type="bid" />
+        </tbody>
+      </table>
+    </div>
   );
 }
