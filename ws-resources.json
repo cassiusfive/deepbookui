@@ -1,0 +1,11 @@
+{
+  "routes": {
+    "/trade/*": "/index.html",
+  },
+  "metadata": {
+    "link": "https://deepbookui.wal.app",
+    "description": "This is a walrus site.",
+    "project_url": "https://github.com/cassiusfive/deepbookui",
+    "creator": "Owen Krause and Cassius Villareal"
+  }
+}
