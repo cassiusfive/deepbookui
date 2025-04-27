@@ -22,7 +22,7 @@ export default function Terminal() {
   );
 
   if (isPoolsLoading && !selectedPool) {
-    return <div>loading</div>;
+    return <div></div>;
   }
 
   if (!poolsData) return <div>loading</div>;
