@@ -43,7 +43,7 @@ export default function Terminal() {
     <>
       <PoolContext.Provider value={selectedPool}>
         <div className="flex h-screen w-screen flex-col font-ubuntu-mono">
-          <div className="h-[80px] shrink-0">
+          <div>
             <Header />
           </div>
           <div className="flex-1">

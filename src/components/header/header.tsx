@@ -57,69 +57,87 @@ export default function Header() {
 
   return (
     <div className="flex w-full items-center justify-between border-b p-4">
-      <div className="flex gap-8">
-        <Sheet>
-          <SheetTrigger className="shrink-0">
-            <div className="flex items-center justify-center gap-2 rounded-full bg-secondary px-3 py-2">
-              <div className="flex shrink-0">
-                <img
-                  src={baseAssetImg}
-                  alt={`${pool.base_asset_symbol} symbol`}
-                  className="z-10 w-6 rounded-full"
-                />
-                <img
-                  src={quoteAssetImg}
-                  alt={`${pool.quote_asset_symbol} symbol`}
-                  className="ml-[-8px] w-6 rounded-full"
-                />
+      <div className="flex flex-col w-full gap-4 md:gap-8 md:flex-row">
+        <div className="flex justify-between">
+          <Sheet>
+            <SheetTrigger className="shrink-0">
+              <div className="max-w-min flex items-center justify-center gap-2 rounded-full bg-secondary px-8 py-2">
+                <div className="flex shrink-0">
+                  <img
+                    src={baseAssetImg}
+                    alt={`${pool.base_asset_symbol} symbol`}
+                    className="z-10 w-6 rounded-full"
+                  />
+                  <img
+                    src={quoteAssetImg}
+                    alt={`${pool.quote_asset_symbol} symbol`}
+                    className="ml-[-8px] w-6 rounded-full"
+                  />
+                </div>
+                <div className="whitespace-nowrap">{`${pair.base_currency}-${pair.quote_currency}`}</div>
               </div>
-              <div className="whitespace-nowrap">{`${pair.base_currency}-${pair.quote_currency}`}</div>
-            </div>
-          </SheetTrigger>
-          <SheetContent
-            className="top-[80px] h-[calc(100vh-80px)] w-[330px]"
-            side="left"
-          >
-            <PairTable />
-          </SheetContent>
-        </Sheet>
+            </SheetTrigger>
+            <SheetContent
+              className="top-[80px] h-[calc(100vh-80px)] w-[330px]"
+              side="left"
+            >
+              <PairTable />
+            </SheetContent>
+          </Sheet>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:gap-8 gap-4">
-          <div className="flex flex-col">
-            <div className="text-nowrap text-sm text-muted-foreground">
-              LAST PRICE (24H)
+          <div className="md:hidden flex items-center gap-4">
+          <Dialog>
+            <DialogTrigger>
+              <SettingsIcon className="w-5" strokeWidth={1.5} />
+            </DialogTrigger>
+            <DialogContent>
+              <Settings />
+            </DialogContent>
+          </Dialog>
+          <ConnectButton connectText="Connect" />
+        </div>
+
+        </div>
+        <div className="flex gap-8 bg-secondary rounded p-4 md:p-0 md:bg-inherit">
+          <div className="flex flex-col gap-2 md:flex-row md:gap-8">
+            <div className="flex flex-col">
+              <div className="text-nowrap text-muted-foreground">
+                LAST PRICE (24H)
+              </div>
+              <div className="text-nowrap text-2xl md:text-base">
+                ${price.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}{" "}
+                <span className={`text-base ${pair.price_change_percent_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {pair.price_change_percent_24h.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}%
+                </span>
+              </div>
             </div>
-            <div>
-              ${price.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}{" "}
-              <span className={pair.price_change_percent_24h >= 0 ? "text-green-500" : "text-red-500"}>
-                {pair.price_change_percent_24h.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}%
-              </span>
+            <div className="flex flex-row gap-4 md:gap-8">
+              <div className="flex flex-col">
+                <div className="text-nowrap text-muted-foreground">
+                  24H VOLUME
+                </div>
+                <div>
+                  ${(pair.base_volume + pair.quote_volume).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <div className="text-nowrap text-muted-foreground">
+                  24H HIGH
+                </div>
+                <div>${pair.highest_price_24h.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</div>
+              </div>
+              <div className="flex flex-col">
+                <div className="text-nowrap text-muted-foreground">
+                  24H LOW
+                </div>
+                <div>${pair.lowest_price_24h.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</div>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col">
-            <div className="text-nowrap text-sm text-muted-foreground">
-              24H VOLUME
-            </div>
-            <div>
-              ${(pair.base_volume + pair.quote_volume).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <div className="text-nowrap text-sm text-muted-foreground">
-              24H HIGH
-            </div>
-            <div>${pair.highest_price_24h.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</div>
-          </div>
-          <div className="flex flex-col">
-            <div className="text-nowrap text-sm text-muted-foreground">
-              24H LOW
-            </div>
-            <div>${pair.lowest_price_24h.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="hidden md:flex md:items-center md:gap-4">
         <Dialog>
           <DialogTrigger>
             <SettingsIcon className="w-5" strokeWidth={1.5} />
