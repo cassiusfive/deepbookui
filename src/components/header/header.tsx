@@ -84,15 +84,15 @@ export default function Header() {
           </SheetContent>
         </Sheet>
 
-        <div className="hidden gap-8 md:flex">
-          <div className="flex shrink-0 flex-col">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:gap-8 gap-4">
+          <div className="flex flex-col">
             <div className="text-nowrap text-sm text-muted-foreground">
               LAST PRICE (24H)
             </div>
-            <div className="">
-              ${price}{" "}
-              <span className="text-red-500">
-                {pair.price_change_percent_24h.toFixed(2)}%
+            <div>
+              ${price.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}{" "}
+              <span className={pair.price_change_percent_24h >= 0 ? "text-green-500" : "text-red-500"}>
+                {pair.price_change_percent_24h.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}%
               </span>
             </div>
           </div>
@@ -100,21 +100,21 @@ export default function Header() {
             <div className="text-nowrap text-sm text-muted-foreground">
               24H VOLUME
             </div>
-            <div className="">
-              ${(pair.base_volume + pair.quote_volume).toFixed(0)}
+            <div>
+              ${(pair.base_volume + pair.quote_volume).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
             </div>
           </div>
           <div className="flex flex-col">
             <div className="text-nowrap text-sm text-muted-foreground">
               24H HIGH
             </div>
-            <div className="">${pair.highest_price_24h.toFixed(4)}</div>
+            <div>${pair.highest_price_24h.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</div>
           </div>
           <div className="flex flex-col">
             <div className="text-nowrap text-sm text-muted-foreground">
               24H LOW
             </div>
-            <div className="">${pair.lowest_price_24h.toFixed(4)}</div>
+            <div>${pair.lowest_price_24h.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</div>
           </div>
         </div>
       </div>

@@ -100,8 +100,8 @@ export default function PairTable() {
                 </p>
                 <p className="text-right text-xs">
                   {pair.quote_currency.includes("USD")
-                    ? `$${pair.last_price.toFixed(2)}`
-                    : `${pair.last_price.toFixed(2)} ${pair.quote_currency}`}
+                    ? `$${pair.last_price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`
+                    : `${pair.last_price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${pair.quote_currency}`}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Vol {formatter.format(pair.quote_volume)}{" "}
