@@ -42,36 +42,23 @@ export default function Terminal() {
   return (
     <>
       <PoolContext.Provider value={selectedPool}>
-        {/* Full-height container */}
         <div className="flex h-screen w-screen flex-col font-ubuntu-mono">
-          {/* Header row (always at the top) */}
           <div className="h-[80px] shrink-0">
             <Header />
           </div>
-
-          {/* Main content area (flex-1 so it fills remaining space) */}
           <div className="flex-1">
-            {/* Mobile-first: single-column layout */}
-            {/* On md screens: 3-column grid as before */}
-            <div className="grid h-full w-full grid-cols-1 grid-rows-[400px_400px_auto_auto] md:grid-cols-[minmax(0,1fr)_270px_270px] md:grid-rows-[max(60vh,400px)_minmax(100px,1fr)]">
-              {/* Chart */}
-              <div className="col-span-1 border-b md:col-start-1 md:col-end-1 md:row-start-1 md:row-end-3 md:border-b-0">
-                <Chart />
-              </div>
-
-              {/* Market Data */}
-              <div className="col-span-1 border-b md:col-start-2 md:col-end-2 md:row-start-1 md:row-end-3 md:border-b-0 md:border-l">
-                <MarketData />
-              </div>
-
-              {/* Trade */}
-              <div className="col-span-1 border-b md:col-start-3 md:col-end-3 md:row-start-1 md:row-end-3 md:border-b-0 md:border-l">
-                <Trade />
-              </div>
-
-              {/* User (spans the full width on md) */}
-              <div className="col-span-1 w-full overflow-y-auto border-t md:col-start-1 md:col-end-4 md:border-t">
-                <User />
+           <div className="grid grid-cols-1 grid-rows-[400px_400px_auto_auto] md:grid-cols-[minmax(0,1fr)_270px_270px] md:grid-rows-[max(60vh,400px)_minmax(100px,1fr)]">
+             <div className="col-span-1 md:col-start-1 md:col-end-1">
+               <Chart />
+             </div>
+             <div className="col-span-1 md:col-start-2 md:col-end-2 border-l">
+               <MarketData />
+             </div>
+             <div className="col-span-1 md:col-start-3 md:col-end-3 md:row-start-1 md:row-end-3 border-l">
+               <Trade />
+             </div>
+             <div className="overflow-y-auto col-span-1 md:col-start-1 md:col-end-3 border-t">
+               <User />
               </div>
             </div>
           </div>
