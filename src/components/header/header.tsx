@@ -66,7 +66,7 @@ export default function Header() {
                     />
                   </div>
                 </div>
-                {isSummaryLoading ? 
+                {isSummaryLoading || !pair ? 
                   <div className="h-5 w-20 bg-muted rounded"></div> : 
                   <div className="whitespace-nowrap">{`${pair.base_currency}-${pair.quote_currency}`}</div> 
                 }
@@ -95,7 +95,7 @@ export default function Header() {
 
         </div>
         <div className="flex gap-8 bg-secondary rounded p-4 md:p-0 md:bg-inherit">
-          {(isSummaryLoading || isPriceLoading) ? (
+          {(isSummaryLoading || isPriceLoading || !pair || !price) ? (
             <div className="flex flex-col gap-2 md:flex-row md:gap-8">
               <div className="flex flex-col text-sm">
                 <div className="text-nowrap text-muted-foreground">
