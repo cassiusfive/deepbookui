@@ -18,11 +18,11 @@ type ResponseData = {
   };
 }
 
-async function fetchGeckoTerminalOHLCV(poolId: string) {
+async function fetchCandleStickData(poolId: string) {
   const end = Math.floor(Date.now() / 1000)
   const start = end - (60 * 60 * 24 * 7)
 
-  const url = `https://api-sui.cetus.zone/v2/sui/deepbookv3/prices?date_type=hour&start_timestamp=${start}&end_timestamp=${end}&address=${poolId}`;
+  const url = `https://api-sui.cetus.zone/v3/sui/deepbookv3/prices?date_type=hour&start_timestamp=${start}&end_timestamp=${end}&address=${poolId}`;
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -45,7 +45,7 @@ export function useCandleData() {
   return useQuery({
     queryKey: ["candleData", pool.pool_id],
     queryFn: async () => {
-      return fetchGeckoTerminalOHLCV(pool.pool_id);
+      return fetchCandleStickData(pool.pool_id);
     },
     refetchInterval: 10000,
   });
