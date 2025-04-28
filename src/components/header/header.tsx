@@ -50,28 +50,25 @@ export default function Header() {
       <div className="flex flex-col w-full gap-4 md:gap-8 md:flex-row">
         <div className="flex justify-between">
           <Sheet>
-            <SheetTrigger className="shrink-0">
+            <SheetTrigger>
               <div className="max-w-min flex items-center justify-center gap-2 rounded-full bg-secondary px-8 py-2">
                 <div className="flex shrink-0">
-                  <div className="flex shrink-0">
-                    <img
-                      src={baseAssetImg}
-                      alt={`${pool.base_asset_symbol} symbol`}
-                      className="z-10 w-6 rounded-full"
-                    />
-                    <img
-                      src={quoteAssetImg}
-                      alt={`${pool.quote_asset_symbol} symbol`}
-                      className="ml-[-8px] w-6 rounded-full"
-                    />
-                  </div>
+                  <img
+                    src={baseAssetImg}
+                    alt={`${pool.base_asset_symbol} symbol`}
+                    className="z-10 w-6 rounded-full"
+                  />
+                  <img
+                    src={quoteAssetImg}
+                    alt={`${pool.quote_asset_symbol} symbol`}
+                    className="ml-[-8px] w-6 rounded-full"
+                  />
                 </div>
                 {isSummaryLoading || !pair ? 
                   <div className="h-5 w-20 bg-muted rounded"></div> : 
                   <div className="whitespace-nowrap">{`${pair.base_currency}-${pair.quote_currency}`}</div> 
                 }
               </div>
-              
             </SheetTrigger>
             <SheetContent
               className="top-[80px] h-[calc(100vh-80px)] w-[330px]"
@@ -134,7 +131,7 @@ export default function Header() {
                 </div>
                 <div className="text-nowrap text-2xl md:text-sm">
                   ${price.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}{" "}
-                  <span className={`text-base ${pair.price_change_percent_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  <span className={`${pair.price_change_percent_24h >= 0 ? "text-green-500" : "text-red-500"}`}>
                     {pair.price_change_percent_24h.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}%
                   </span>
                 </div>
